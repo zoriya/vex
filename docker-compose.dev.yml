@@ -8,6 +8,8 @@ services:
       - ./api:/app
     env_file:
       - ./.env
+    ports:
+      - 1597:1597
     depends_on:
       postgres:
         condition: service_healthy

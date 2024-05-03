@@ -1,9 +1,8 @@
-package api
+package main
 
 import (
-	"log"
-
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 type Handler struct{}
@@ -17,8 +16,8 @@ func main() {
 	h := Handler{}
 
 	e := echo.New()
+	e.Use(middleware.Logger())
 	e.GET("/entries", h.GetEntries)
 
-	log.Print("Listening on :1597")
 	e.Start(":1597")
 }
