@@ -20,11 +20,6 @@ func (h *Handler) GetEntries(c echo.Context) error {
 	return c.JSON(200, ret)
 }
 
-func (h *Handler) AddFeed(c echo.Context) error {
-	ret := make([]interface{}, 0)
-	return c.JSON(201, ret)
-}
-
 func main() {
 	con := fmt.Sprintf(
 		"postgresql://%v:%v@%v:%v/%v?sslmode=disable",
@@ -45,7 +40,7 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.GET("/entries", h.GetEntries)
-	e.POST("/feed", h.AddFeed)
+	h.RegisterFeedsRoutes(e)
 
 	e.Start(":1597")
 }
