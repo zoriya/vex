@@ -3,5 +3,6 @@
     packages = with pkgs; [
       go
       wgo
+      pgformatter
     ];
   }
