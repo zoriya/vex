@@ -56,6 +56,7 @@ func New() *Model {
 func (m *Model) initList(width int, height int) {
 	m.list = list.New([]list.Item{}, list.NewDefaultDelegate(), width, height)
 	m.list.Title = "Posts"
+	m.list.SetFilteringEnabled(false)
 	var f = Feed{id: "1", tags: []string{"Devops", "Kubernetes"}, name: "zwindler", url: "zwindler.blog", faviconUrl: "zwindler.blog.favicon"}
 	m.list.SetItems([]list.Item{
 		Entry{id: "1", title: "yay", content: "ouin ouin ouin", link: "awd", date: time.Now(), isRead: false, isIgnored: false, isReadLater: false, isBookmarked: false, feed: f},
