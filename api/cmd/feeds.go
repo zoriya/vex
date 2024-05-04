@@ -4,10 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
-
 
 type AddFeedDto struct {
 	Link string   `json:"link" validate:"required,url"`
@@ -15,10 +13,13 @@ type AddFeedDto struct {
 }
 
 func (h *Handler) AddFeed(c echo.Context) error {
-	user := uuid.New()
+	user, err := GetCurrentUserId(c)
+	if err != nil {
+		return err
+	}
 
 	var req AddFeedDto
-	err := c.Bind(&req)
+	err = c.Bind(&req)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -34,6 +35,6 @@ func (h *Handler) AddFeed(c echo.Context) error {
 	return c.JSON(201, feed)
 }
 
-func (h *Handler) RegisterFeedsRoutes(echo *echo.Echo, restricted *echo.Group) {
-	restricted.POST("/feeds", h.AddFeed)
+func (h *Handler) RegisterFeedsRoutes(echo *echo.Echo, r *echo.Group) {
+	r.POST("/feeds", h.AddFeed)
 }
