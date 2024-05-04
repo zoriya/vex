@@ -2,6 +2,7 @@
 	import type { Post } from "$lib/types";
 	import Time, { dayjs } from "svelte-time";
 	import TagList from "./tag-list.svelte";
+	import QuillPenLine from "virtual:icons/mingcute/quill-pen-line";
 	export let post: Post;
 </script>
 
@@ -9,6 +10,13 @@
 	<div class="origin">
 		<img src={post.feed.faviconUrl} alt={post.feed.title} />
 		<span>{post.feed.title}</span> |
+		{#if post.author}
+			<div class="author">
+				<QuillPenLine />
+				<span>{post.author}</span>
+			</div>
+			|
+		{/if}
 		<Time
 			timestamp={post.date}
 			relative={true}
@@ -26,10 +34,11 @@
 
 <style>
 	article {
-		border-radius: 5px;
+		border-radius: 10px;
 		/* box-shadow: 0px 0px 12px 9px rgba(0, 0, 0, 0.28); */
 		border: 1px solid #e0e0e0;
-		padding: 0.5rem;
+		padding: 0.7rem;
+		background-color: rgb(220, 220, 220);
 	}
 
 	.origin {
@@ -53,5 +62,11 @@
 
 	p {
 		margin: 0.5rem;
+	}
+
+	.author {
+		display: flex;
+		align-items: center;
+		gap: 3px;
 	}
 </style>

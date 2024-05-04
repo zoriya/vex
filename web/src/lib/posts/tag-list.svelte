@@ -8,7 +8,7 @@
 
 <div>
 	{#each tagsToDisplay as tag}
-		<span class="tag">{tag}</span>
+		<div class="tag">{tag}</div>
 	{/each}
     {#if tags.length > nbNonExpandedTags}
         <button on:click={() => isExpanded = !isExpanded}>
@@ -27,11 +27,14 @@
 		background-color: #4d4c4c;
 		padding: 0.25rem 0.5rem;
 		border-radius: 5px;
+        font-size: small;
+        color: white;
 	}
 
     button {
-        /* border-radius: 5px; */
-        padding: 0.25rem 0.5rem;
+        padding: 0;
+        background-color: transparent;
+        border: none;
         cursor: pointer;
     }
 </style>
