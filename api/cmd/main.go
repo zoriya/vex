@@ -17,13 +17,9 @@ import (
 
 type Handler struct {
 	feeds     vex.FeedService
+	entries   vex.EntryService
 	users     vex.UserService
 	jwtSecret []byte
-}
-
-func (h *Handler) GetEntries(c echo.Context) error {
-	ret := make([]interface{}, 0)
-	return c.JSON(200, ret)
 }
 
 type Validator struct {
@@ -53,6 +49,7 @@ func main() {
 	}
 	h := Handler{
 		feeds:     vex.NewFeedService(db),
+		entries:   vex.NewEntryService(db),
 		users:     vex.NewUserService(db),
 		jwtSecret: []byte(os.Getenv("JWT_SECRET")),
 	}
@@ -68,6 +65,7 @@ func main() {
 
 	e.GET("/entries", h.GetEntries)
 	h.RegisterLoginRoutes(e, r)
+	h.RegisterEntriesRoutes(e, r)
 	h.RegisterFeedsRoutes(e, r)
 
 	e.Start(":1597")

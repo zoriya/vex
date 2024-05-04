@@ -7,10 +7,10 @@ import (
 )
 
 type User struct {
-	Id       uuid.UUID
-	Name     string
-	Email    string
-	Password []byte
+	Id       uuid.UUID `json:"id"`
+	Name     string    `json:"name"`
+	Email    string    `json:"email"`
+	Password []byte    `json:"-"`
 }
 
 type UserService struct {
