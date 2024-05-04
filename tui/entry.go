@@ -3,10 +3,13 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	huh "github.com/charmbracelet/huh"
 )
 
 type Feed struct {
@@ -45,12 +48,18 @@ func (e Entry) Description() string {
 }
 
 type Model struct {
-	list list.Model
-	err  error
+	list      list.Model
+	textInput textinput.Model
+	err       error
 }
 
 func New() *Model {
-	return &Model{}
+	ti := textinput.New()
+	ti.Placeholder = "Pikachu"
+	ti.Focus()
+	ti.CharLimit = 156
+	ti.Width = 20
+	return &Model{textInput: ti}
 }
 
 func (m *Model) initList(width int, height int) {
@@ -73,14 +82,41 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.initList(msg.Width, msg.Height)
+	case tea.KeyMsg:
+		switch msg.Type {
+		case tea.KeyEnter, tea.KeyCtrlC, tea.KeyEsc:
+			return m, tea.Quit
+		}
+
 	}
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
+	m.textInput, cmd = m.textInput.Update(msg)
+	if strings.HasSuffix(m.textInput.Value(), "feed:") {
+		var feed string
+		huh.NewSelect[string]().
+			Title("Pick a country.").
+			Options(
+				huh.NewOption("United States", "US"),
+				huh.NewOption("Germany", "DE"),
+				huh.NewOption("Brazil", "BR"),
+				huh.NewOption("Canada", "CA"),
+			).
+			Value(&feed).Run()
+		m.textInput.SetValue(m.textInput.Value() + feed)
+		// var suggestions = []string{"cncf.io/rss", "zwindler.blog/index.xml"}
+		// s := make([]string, len(suggestions))
+		// for i := range suggestions {
+		// 	s[i] = fmt.Sprintf("%s%s", m.textInput.Value(), suggestions[i])
+		// }
+		// m.textInput.SetSuggestions(s)
+		// m.textInput.ShowSuggestions = true
+	}
 	return m, cmd
 }
 
 func (m Model) View() string {
-	return m.list.View()
+	return m.textInput.View() // + m.list.View()
 }
 
 func main() {
