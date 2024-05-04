@@ -62,7 +62,7 @@ func main() {
 	e.Use(middleware.Logger())
 
 	r := e.Group("")
-	e.Use(echojwt.WithConfig(echojwt.Config{
+	r.Use(echojwt.WithConfig(echojwt.Config{
 		SigningKey: h.jwtSecret,
 	}))
 

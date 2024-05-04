@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/zoriya/vex"
@@ -17,7 +17,13 @@ type LoginDto struct {
 type RegisterDto struct {
 	Name     string `json:"name" validate:"required"`
 	Email    string `json:"email" validate:"required"`
-	Password string `json:"password" validate:"required,max(60)"`
+	Password string `json:"password" validate:"required"`
+}
+
+type UserDto struct {
+	Id    uuid.UUID `json:"id"`
+	Name  string    `json:"name"`
+	Email string    `json:"email"`
 }
 
 func (h *Handler) Login(c echo.Context) error {
@@ -41,7 +47,7 @@ func (h *Handler) Login(c echo.Context) error {
 }
 
 func (h *Handler) CreateToken(c echo.Context, user *vex.User) error {
-	claims := &jwt.StandardClaims{
+	claims := &jwt.RegisteredClaims{
 		Subject: user.Id.String(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -80,7 +86,11 @@ func (h *Handler) GetMe(c echo.Context) error {
 	if user == nil {
 		return echo.NewHTTPError(500, "Internal server error")
 	}
-	return c.JSON(200, user)
+	return c.JSON(200, UserDto{
+		Id:    user.Id,
+		Name:  user.Name,
+		Email: user.Email,
+	})
 }
 
 func GetCurrentUserId(c echo.Context) (uuid.UUID, error) {
@@ -88,11 +98,11 @@ func GetCurrentUserId(c echo.Context) (uuid.UUID, error) {
 	if user == nil {
 		return uuid.UUID{}, echo.NewHTTPError(401, "Unauthorized")
 	}
-	claims := user.Claims.(*jwt.StandardClaims)
-	if claims == nil {
-		return uuid.UUID{}, echo.NewHTTPError(403, "Missing claims")
+	sub, err := user.Claims.GetSubject()
+	if err != nil {
+		return uuid.UUID{}, echo.NewHTTPError(403, "Could not retrive subject")
 	}
-	ret, err := uuid.Parse(claims.Subject)
+	ret, err := uuid.Parse(sub)
 	if err != nil {
 		return uuid.UUID{}, echo.NewHTTPError(403, "Invalid id")
 	}
@@ -102,5 +112,5 @@ func GetCurrentUserId(c echo.Context) (uuid.UUID, error) {
 func (h *Handler) RegisterLoginRoutes(e *echo.Echo, r *echo.Group) {
 	e.POST("/login", h.Login)
 	e.POST("/register", h.Register)
-	r.GET("/register", h.GetMe)
+	r.GET("/me", h.GetMe)
 }
