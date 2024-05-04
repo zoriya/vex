@@ -1,6 +1,36 @@
-import type { Post } from "$lib/types";
+import type { Post, Feed } from "$lib/types";
 
-const data: Post[] = [
+const feeds: Feed[] = [
+	{
+		id: "1",
+		title: "The first feed",
+		url: "https://example.com/feed",
+		faviconUrl: "https://kit.svelte.dev/favicon.png",
+		tags: ["tag1", "tag2"],
+		submitterId: "1",
+		addedDate: new Date(),
+	},
+	{
+		id: "2",
+		title: "Phoronix",
+		url: "https://www.phoronix.com",
+		faviconUrl: "https://www.phoronix.com/favicon.ico",
+		tags: ["linux", "kernel", "gnu", "gnu/linux", "gnu+linux", "gnu linux"],
+		submitterId: "1",
+		addedDate: new Date(),
+	},
+	{
+		id: "3",
+		title: "LWN.net",
+		url: "https://lwn.net",
+		faviconUrl: "https://lwn.net/favicon.ico",
+		tags: ["linux", "kernel", "gnu", "gnu/linux", "gnu+linux", "gnu linux"],
+		submitterId: "1",
+		addedDate: new Date(),
+	},
+];
+
+const posts: Post[] = [
 	{
 		id: "1",
 		title: "The first post",
@@ -12,13 +42,7 @@ const data: Post[] = [
 		isIgnored: false,
 		isReadLater: false,
 		author: "John Doe",
-		feed: {
-			id: "1",
-			title: "The first feed",
-			url: "https://example.com/feed",
-			faviconUrl: "https://kit.svelte.dev/favicon.png",
-			tags: ["tag1", "tag2"],
-		},
+		feed: feeds[0],
 	},
 	{
 		id: "2",
@@ -30,23 +54,14 @@ const data: Post[] = [
 		isBookmarked: true,
 		isIgnored: false,
 		isReadLater: false,
-		feed: {
-			id: "2",
-			title: "Phoronix",
-			url: "https://www.phoronix.com",
-			faviconUrl: "https://www.phoronix.com/favicon.ico",
-			// put 50 tags in the array linked with linux world
-			tags: [
-				"linux", "kernel", "gnu", "gnu/linux", "gnu+linux", "gnu linux",
-				"wine", "winehq", "wine-staging", "wine-devel", "winehq-devel", "winehq-staging",
-				"mesa", "mesa3d", "mesa 3d", "mesa-3d", "mesa3d-devel", "mesa3d-staging",
-				"NVK"
-			],
-		},
+		feed: feeds[1],
 	}
 ];
 
 export function load() {
-	return { data };
+	return { 
+		posts,
+		feeds
+	 };
 }
 

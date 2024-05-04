@@ -27,18 +27,18 @@
 		<h2>{post.title}</h2>
 		<p>{post.content}</p>
 	</content>
-	<footer>
+	<!-- <footer>
 		<TagList tags={post.feed.tags} />
-	</footer>
+	</footer> -->
 </article>
 
 <style>
 	article {
-		border-radius: 10px;
-		/* box-shadow: 0px 0px 12px 9px rgba(0, 0, 0, 0.28); */
+		/* border-radius: 10px;
+		box-shadow: 0px 0px 12px 9px rgba(0, 0, 0, 0.28);
 		border: 1px solid #e0e0e0;
 		padding: 0.7rem;
-		background-color: rgb(220, 220, 220);
+		background-color: rgb(220, 220, 220); */
 	}
 
 	.origin {

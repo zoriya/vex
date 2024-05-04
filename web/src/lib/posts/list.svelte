@@ -4,15 +4,18 @@
 	export let posts: Post[] = [];
 </script>
 
-<h1>Posts</h1>
+<div>
+	<h1>Posts</h1>
 
-<ul>
-	{#each posts as post}
-		<li>
-			<Card {post} />
-		</li>
-	{/each}
-</ul>
+	<ul>
+		{#each posts as post}
+			<li>
+				<Card {post} />
+			</li>
+			<hr>
+		{/each}
+	</ul>
+</div>
 
 <style>
 	ul {
@@ -20,7 +23,5 @@
 		padding: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
 	}
-
 </style>
