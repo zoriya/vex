@@ -72,7 +72,7 @@ func (h *Handler) Register(c echo.Context) error {
 
 	user, err := h.users.Create(req.Name, req.Email, req.Password)
 	if err != nil {
-		return err
+		return echo.NewHTTPError(409,"Email already taken")
 	}
 	return h.CreateToken(c, &user)
 }
