@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -34,6 +37,12 @@ type Entry struct {
 	isReadLater  bool
 	feed         Feed
 }
+
+type statusMsg int
+
+type errMsg struct{ error }
+
+func (e errMsg) Error() string { return e.error.Error() }
 
 func (e Entry) FilterValue() string {
 	return e.title
@@ -75,7 +84,7 @@ func (m *Model) initList(width int, height int) {
 }
 
 func (m Model) Init() tea.Cmd {
-	return nil
+	return checkServer
 }
 
 func (m Model) handleSearchCompletion() (Model, tea.Cmd) {
@@ -103,6 +112,8 @@ func (m Model) handleSearchCompletion() (Model, tea.Cmd) {
 	if lastWord == "feed:" {
 		var feed string
 		var feeds = []string{"Devops", "System", "Angular"}
+		tea.LogToFile("yay.log", "")
+		log.Print("input")
 		huh.NewSelect[string]().
 			Title("Pick a feed.").
 			Options(
@@ -115,6 +126,67 @@ func (m Model) handleSearchCompletion() (Model, tea.Cmd) {
 	return m, cmd
 }
 
+func (m *Model) deleteWordBackward() {
+	if m.textInput.Position() == 0 || len(m.textInput.Value()) == 0 {
+		return
+	}
+
+	// TODO: wtf are other echo modes, dont care
+	//if m.textInput.EchoMode != textinput.EchoNormal {
+	//	m.deleteBeforeCursor()
+	//	return
+	//}
+
+	// Linter note: it's critical that we acquire the initial cursor position
+	// here prior to altering it via SetCursor() below. As such, moving this
+	// call into the corresponding if clause does not apply here.
+	oldPos := m.textInput.Position() //nolint:ifshort
+
+	m.textInput.SetCursor(oldPos - 1)
+	// ECHO character?
+	for m.textInput.Value()[m.textInput.Position()] == ' ' {
+		if m.textInput.Position() <= 0 {
+			break
+		}
+		// ignore series of whitespace before cursor
+		m.textInput.SetCursor(m.textInput.Position() - 1)
+	}
+
+	for m.textInput.Position() > 0 {
+		if m.textInput.Value()[m.textInput.Position()] != ' ' {
+			m.textInput.SetCursor(m.textInput.Position() - 1)
+		} else {
+			if m.textInput.Position() > 0 {
+				// keep the previous space
+				m.textInput.SetCursor(m.textInput.Position() + 1)
+			}
+			break
+		}
+	}
+
+	if oldPos > len(m.textInput.Value()) {
+		m.textInput.SetValue(m.textInput.Value()[:m.textInput.Position()])
+	} else {
+		m.textInput.SetValue(m.textInput.Value()[:m.textInput.Position()] + m.textInput.Value()[oldPos:])
+	}
+}
+
+const url = "localhost:3000"
+
+func checkServer() tea.Msg {
+	c := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	res, err := c.Get(url)
+	if err != nil {
+		return errMsg{err}
+	}
+	defer res.Body.Close() // nolint:errcheck
+
+	return statusMsg(res.StatusCode)
+
+}
+
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -124,18 +196,29 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyEnter, tea.KeyCtrlC, tea.KeyEsc:
 			return m, tea.Quit
 		}
-
+		switch {
+		case key.Matches(msg, m.textInput.KeyMap.DeleteCharacterBackward):
+			words := strings.Split(m.textInput.Value(), " ")
+			if len(words) > 0 && (strings.HasPrefix(words[len(words)-1], "tag:") || strings.HasPrefix(words[len(words)-1], "feed:")) {
+				m.deleteWordBackward()
+			}
+		}
+		// if writing
 	}
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
 	m.textInput, cmd = m.textInput.Update(msg)
-	m, cmd = m.handleSearchCompletion()
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		_ = msg
+		m, cmd = m.handleSearchCompletion()
+	}
 
 	return m, cmd
 }
 
 func (m Model) View() string {
-	return m.textInput.View() // + m.list.View()
+	return m.textInput.View() + m.list.View()
 }
 
 func main() {
