@@ -58,7 +58,7 @@ func New() *Model {
 	ti.Placeholder = "Pikachu"
 	ti.Focus()
 	ti.CharLimit = 156
-	ti.Width = 20
+	ti.Width = 56
 	return &Model{textInput: ti}
 }
 
@@ -78,6 +78,43 @@ func (m Model) Init() tea.Cmd {
 	return nil
 }
 
+func (m Model) handleSearchCompletion() (Model, tea.Cmd) {
+	var cmd tea.Cmd
+	queryWords := strings.Split(m.textInput.Value(), " ")
+	if len(queryWords) == 0 {
+		return m, cmd
+	}
+	lastWord := queryWords[len(queryWords)-1]
+	if lastWord == "tag:" {
+		var feed string
+		huh.NewSelect[string]().
+			Title("Pick a feed.").
+			Options(
+				huh.NewOption("United States", "US"),
+				huh.NewOption("Germany", "DE"),
+				huh.NewOption("Brazil", "BR"),
+				huh.NewOption("Canada", "CA"),
+			).
+			Value(&feed).Run()
+		m.textInput.SetValue(m.textInput.Value() + feed)
+		m.textInput.CursorEnd()
+	}
+
+	if lastWord == "feed:" {
+		var feed string
+		var feeds = []string{"Devops", "System", "Angular"}
+		huh.NewSelect[string]().
+			Title("Pick a feed.").
+			Options(
+				huh.NewOptions(feeds...)...,
+			).
+			Value(&feed).Run()
+		m.textInput.SetValue(m.textInput.Value() + feed)
+		m.textInput.CursorEnd()
+	}
+	return m, cmd
+}
+
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -92,26 +129,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
 	m.textInput, cmd = m.textInput.Update(msg)
-	if strings.HasSuffix(m.textInput.Value(), "feed:") {
-		var feed string
-		huh.NewSelect[string]().
-			Title("Pick a country.").
-			Options(
-				huh.NewOption("United States", "US"),
-				huh.NewOption("Germany", "DE"),
-				huh.NewOption("Brazil", "BR"),
-				huh.NewOption("Canada", "CA"),
-			).
-			Value(&feed).Run()
-		m.textInput.SetValue(m.textInput.Value() + feed)
-		// var suggestions = []string{"cncf.io/rss", "zwindler.blog/index.xml"}
-		// s := make([]string, len(suggestions))
-		// for i := range suggestions {
-		// 	s[i] = fmt.Sprintf("%s%s", m.textInput.Value(), suggestions[i])
-		// }
-		// m.textInput.SetSuggestions(s)
-		// m.textInput.ShowSuggestions = true
-	}
+	m, cmd = m.handleSearchCompletion()
+
 	return m, cmd
 }
 
