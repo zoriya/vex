@@ -15,11 +15,11 @@ type statusMsg int
 
 type errMsg struct{ error }
 type missingJwtMsg struct{}
+type noJwtMsg struct{}
+type invalidJwtMsg struct{}
+type httpErrorMsg error
 
 func (e errMsg) Error() string { return e.error.Error() }
-
-type getEntriesSuccessMsg []Entry
-type httpErrorMsg error
 
 const serverUrl = "http://localhost:1597"
 
@@ -40,6 +40,35 @@ func getData(req *http.Request) ([]byte, error) {
 		return nil, httpErrorMsg(err)
 	}
 	return data, nil
+
+}
+
+func checkJwt(jwt *string) tea.Cmd {
+
+	return func() tea.Msg {
+		if jwt == nil || *jwt == "" {
+			return noJwtMsg{}
+		}
+		url := fmt.Sprintf("%s/me", serverUrl)
+		req, _ := http.NewRequest(http.MethodPost, url, nil)
+		req.Header.Add("Content-type", "application/json")
+		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", *jwt))
+		data, err := getData(req)
+		if err != nil {
+			return invalidJwtMsg{}
+		}
+		var resp struct {
+			Id   string `json:"id"`
+			Name string `json:"name"`
+		}
+		err = json.Unmarshal(data, &resp)
+		if err != nil {
+			return invalidJwtMsg{}
+		}
+
+		return nil
+
+	}
 
 }
 
@@ -107,42 +136,49 @@ func register(username string, password string, email string) tea.Cmd {
 	}
 }
 
+type getEntriesSuccessMsg []Entry
+
 func getEntries(jwt *string) tea.Cmd {
 	return func() tea.Msg {
 		url := fmt.Sprintf("%s/entries", serverUrl)
-
-		req, err := http.NewRequest(http.MethodGet, url, nil)
+		req, _ := http.NewRequest(http.MethodGet, url, nil)
 		if jwt == nil {
 			return missingJwtMsg{}
 		}
 		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", *jwt))
-
+		req.Header.Add("Content-type", "application/json")
+		data, err := getData(req)
 		if err != nil {
 			return httpErrorMsg(err)
 		}
-
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			return httpErrorMsg(err)
-		}
-		defer resp.Body.Close() // nolint: errcheck
-
-		data, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return httpErrorMsg(err)
-		}
-
 		var entries []Entry
-
 		err = json.Unmarshal(data, &entries)
 		if err != nil {
 			return httpErrorMsg(err)
 		}
-
 		return getEntriesSuccessMsg(entries)
 	}
-
 }
 
 type getFeedsSuccessMsg []Feed
-type getFeedsErrMsg error
+
+func getFeeds(jwt *string) tea.Cmd {
+	return func() tea.Msg {
+		url := fmt.Sprintf("%s/feeds", serverUrl)
+		req, _ := http.NewRequest(http.MethodGet, url, nil)
+		if jwt == nil {
+			return missingJwtMsg{}
+		}
+		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", *jwt))
+		data, err := getData(req)
+		if err != nil {
+			return httpErrorMsg(err)
+		}
+		var feeds []Feed
+		err = json.Unmarshal(data, &feeds)
+		if err != nil {
+			return httpErrorMsg(err)
+		}
+		return getFeedsSuccessMsg(feeds)
+	}
+}

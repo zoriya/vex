@@ -15,11 +15,11 @@ import (
 )
 
 func (e Entry) FilterValue() string {
-	return e.title
+	return e.ArticleTitle
 }
 
 func (e Entry) Title() string {
-	return e.title
+	return e.ArticleTitle
 }
 
 func (e Entry) Description() string {
@@ -57,16 +57,16 @@ func (m *Model) initList(width int, height int) {
 	m.list = list.New([]list.Item{}, list.NewDefaultDelegate(), width, height)
 	m.list.Title = "Posts"
 	m.list.SetFilteringEnabled(false)
-	var f = Feed{id: "1", tags: []string{"Devops", "Kubernetes"}, name: "zwindler", url: "zwindler.blog", faviconUrl: "zwindler.blog.favicon"}
+	var f = Feed{Id: "1", Tags: []string{"Devops", "Kubernetes"}, Name: "zwindler", Url: "zwindler.blog", FaviconUrl: "zwindler.blog.favicon"}
 	m.list.SetItems([]list.Item{
-		Entry{id: "1", title: "yay", content: "ouin ouin ouin", link: "awd", date: time.Now(), isRead: false, isIgnored: false, isReadLater: false, isBookmarked: false, feed: f},
-		Entry{id: "2", title: "grrrrr", content: "ouin ouin ouin", link: "awd", date: time.Now(), isRead: false, isIgnored: false, isReadLater: false, isBookmarked: false, feed: f},
-		Entry{id: "3", title: "my life is pain", content: "ouin ouin ouin", link: "awd", date: time.Now(), isRead: false, isIgnored: false, isReadLater: false, isBookmarked: false, feed: f},
+		Entry{Id: "1", ArticleTitle: "yay", Content: "ouin ouin ouin", Link: "awd", Date: time.Now(), IsRead: false, IsIgnored: false, IsReadLater: false, IsBookmarked: false, Feed: f},
+		Entry{Id: "2", ArticleTitle: "grrrrr", Content: "ouin ouin ouin", Link: "awd", Date: time.Now(), IsRead: false, IsIgnored: false, IsReadLater: false, IsBookmarked: false, Feed: f},
+		Entry{Id: "3", ArticleTitle: "my life is pain", Content: "ouin ouin ouin", Link: "awd", Date: time.Now(), IsRead: false, IsIgnored: false, IsReadLater: false, IsBookmarked: false, Feed: f},
 	})
 }
 
 func (m Model) Init() tea.Cmd {
-	return tea.Batch(checkServer, m.auth.loginForm.Init(), m.auth.registerForm.Init())
+	return tea.Batch(checkServer, m.auth.loginForm.Init(), m.auth.registerForm.Init(), checkJwt(m.auth.jwt))
 
 }
 
@@ -172,6 +172,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.initList(msg.Width, msg.Height)
+
+	case invalidJwtMsg:
+		m.auth.jwt = new(string)
+		m.page = LOGIN
+		return m, nil
 	case loginSuccessMsg:
 		*m.auth.jwt = msg.string
 		m.page = FEEDS
@@ -254,7 +259,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func main() {
-	tea.LogToFile("yay.log", "")
+	tea.LogToFile("vex.log", "")
 	m := New()
 	p := tea.NewProgram(m)
 	if _, err := p.Run(); err != nil {
