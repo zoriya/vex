@@ -1,14 +1,10 @@
-// /home/cbihan/Documents/front_stuff/vex/web/src/lib/stores/post.store.js
 import type { Post } from "$lib/types";
 import { writable } from 'svelte/store';
 
-// Initial state
 const initialState: Post[] = [];
 
-// Create the writable store
 export const postStore = writable<Post[]>(initialState);
 
-// Actions
 export const addPost = (post: Post) => {
     postStore.update((posts) => [...posts, post]);
 };
