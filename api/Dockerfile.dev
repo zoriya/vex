@@ -3,4 +3,4 @@ RUN go install github.com/bokwoon95/wgo@latest
 WORKDIR /app
 
 EXPOSE 1597
-CMD wgo run .
+CMD wgo run ./cmd
