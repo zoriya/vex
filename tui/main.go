@@ -39,31 +39,12 @@ type Model struct {
 }
 
 func New() *Model {
-	loginForm := huh.NewForm(
-		huh.NewGroup(
-			huh.NewInput().
-				Title("Username").
-				Key("username"),
-			// Validating fields is easy. The form will mark erroneous fields
-			// and display error messages accordingly.
-			// TODO:
-			// Validate(func(str string) error {
-			// 	if str == "octopus773" {
-			// 		return errors.New("Not you")
-			// 	}
-			// 	return nil
-			// })))
-			huh.NewInput().
-				Title("Password").
-				Key("password").
-				Password(true),
-		))
 	ti := textinput.New()
 	ti.Placeholder = "Pikachu"
 	ti.Focus()
 	ti.CharLimit = 156
 	ti.Width = 56
-	return &Model{textInput: ti, auth: Auth{form: loginForm, jwt: new(string)}, page: "LOGIN"}
+	return &Model{textInput: ti, auth: Auth{loginForm: getLoginForm(), registerForm: getRegisterForm(), jwt: new(string)}, page: LOGIN}
 }
 
 func (m Model) getEverything() tea.Cmd {
@@ -85,7 +66,7 @@ func (m *Model) initList(width int, height int) {
 }
 
 func (m Model) Init() tea.Cmd {
-	return tea.Batch(checkServer, m.auth.form.Init())
+	return tea.Batch(checkServer, m.auth.loginForm.Init(), m.auth.registerForm.Init())
 
 }
 
@@ -194,37 +175,70 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case loginSuccessMsg:
 		*m.auth.jwt = msg.string
 		m.page = FEEDS
+		return m, nil
+
+	case registerSuccessMsg:
+		*m.auth.jwt = msg.string
+		m.page = FEEDS
+		return m, nil
 
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyCtrlC, tea.KeyEsc:
 			return m, tea.Quit
+		case tea.KeyCtrlT:
+			if m.page == LOGIN {
+				m.page = REGISTER
+			} else if m.page == REGISTER {
+				m.page = LOGIN
+			}
+
 		}
 		switch {
-		case key.Matches(msg, m.textInput.KeyMap.DeleteCharacterBackward):
+		case key.Matches(msg, m.textInput.KeyMap.DeleteCharacterBackward): //TODO: add only when query
 			words := strings.Split(m.textInput.Value(), " ")
 			if len(words) > 0 && (strings.HasPrefix(words[len(words)-1], "tag:") || strings.HasPrefix(words[len(words)-1], "feed:")) {
 				m.deleteWordBackward()
 			}
 		}
-		// if writing
 	}
 	var cmds []tea.Cmd
 
 	// Process the form
-	form, cmd := m.auth.form.Update(msg)
-	if f, ok := form.(*huh.Form); ok {
-		m.auth.form = f
-		cmds = append(cmds, cmd)
+	// LOGIN
+	if m.page == LOGIN {
+		form, cmd := m.auth.loginForm.Update(msg)
+		if f, ok := form.(*huh.Form); ok {
+			m.auth.loginForm = f
+			cmds = append(cmds, cmd)
+		}
+
+		if m.auth.loginForm.State == huh.StateCompleted {
+			username := m.auth.loginForm.GetString("email")
+			password := m.auth.loginForm.GetString("password")
+			cmds = append(cmds, login(username, password))
+		}
 	}
 
-	if m.auth.form.State == huh.StateCompleted {
-		// Quit when the form is done.
-		username := m.auth.form.GetString("username")
-		password := m.auth.form.GetString("password")
-		cmds = append(cmds, login(username, password))
-	}
+	if m.page == REGISTER {
 
+		// Process the form
+		// LOGIN
+		registerForm, cmd := m.auth.registerForm.Update(msg)
+		if f, ok := registerForm.(*huh.Form); ok {
+			m.auth.registerForm = f
+			cmds = append(cmds, cmd)
+		}
+
+		if m.auth.registerForm.State == huh.StateCompleted {
+			username := m.auth.registerForm.GetString("username")
+			password := m.auth.registerForm.GetString("password")
+			email := m.auth.registerForm.GetString("email")
+			cmds = append(cmds, register(username, password, email))
+		}
+
+	}
+	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
 	cmds = append(cmds, cmd)
 	m.textInput, cmd = m.textInput.Update(msg)
