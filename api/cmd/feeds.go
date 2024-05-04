@@ -12,6 +12,14 @@ type AddFeedDto struct {
 	Tags []string `json:"tags" validate:"required"`
 }
 
+func (h *Handler) GetFeeds(c echo.Context) error {
+	ret, err := h.feeds.ListFeeds()
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, ret)
+}
+
 func (h *Handler) AddFeed(c echo.Context) error {
 	user, err := GetCurrentUserId(c)
 	if err != nil {
@@ -35,6 +43,7 @@ func (h *Handler) AddFeed(c echo.Context) error {
 	return c.JSON(201, feed)
 }
 
-func (h *Handler) RegisterFeedsRoutes(echo *echo.Echo, r *echo.Group) {
+func (h *Handler) RegisterFeedsRoutes(e *echo.Echo, r *echo.Group) {
+	e.GET("/feeds", h.GetFeeds)
 	r.POST("/feeds", h.AddFeed)
 }

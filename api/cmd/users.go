@@ -20,12 +20,6 @@ type RegisterDto struct {
 	Password string `json:"password" validate:"required"`
 }
 
-type UserDto struct {
-	Id    uuid.UUID `json:"id"`
-	Name  string    `json:"name"`
-	Email string    `json:"email"`
-}
-
 func (h *Handler) Login(c echo.Context) error {
 	var req LoginDto
 	err := c.Bind(&req)
@@ -86,11 +80,7 @@ func (h *Handler) GetMe(c echo.Context) error {
 	if user == nil {
 		return echo.NewHTTPError(500, "Internal server error")
 	}
-	return c.JSON(200, UserDto{
-		Id:    user.Id,
-		Name:  user.Name,
-		Email: user.Email,
-	})
+	return c.JSON(200, user)
 }
 
 func GetCurrentUserId(c echo.Context) (uuid.UUID, error) {

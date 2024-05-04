@@ -11,7 +11,8 @@ create table if not exists feeds(
 	link text not null unique,
 	favicon_url text not null,
 	tags text[] not null,
-	submitter_id uuid not null references users(id)
+	submitter_id uuid not null references users(id),
+	added_date timestamp with time zone not null
 );
 
 create table if not exists entries(
