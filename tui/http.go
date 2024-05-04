@@ -35,7 +35,6 @@ func getData(req *http.Request) ([]byte, error) {
 	defer resp.Body.Close() // nolint: errcheck
 
 	data, err := io.ReadAll(resp.Body)
-	log.Print("body", resp.Body)
 	if err != nil {
 		return nil, httpErrorMsg(err)
 	}
@@ -65,9 +64,7 @@ func checkJwt(jwt *string) tea.Cmd {
 		if err != nil {
 			return invalidJwtMsg{}
 		}
-
 		return nil
-
 	}
 
 }

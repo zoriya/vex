@@ -180,12 +180,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case loginSuccessMsg:
 		*m.auth.jwt = msg.string
 		m.page = FEEDS
-		return m, nil
+		return m, m.getEverything()
 
 	case registerSuccessMsg:
 		*m.auth.jwt = msg.string
 		m.page = FEEDS
-		return m, nil
+		return m, m.getEverything()
 
 	case tea.KeyMsg:
 		switch msg.Type {
