@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/jmoiron/sqlx"
+	"github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
@@ -15,7 +16,9 @@ import (
 )
 
 type Handler struct {
-	feeds vex.FeedService
+	feeds     vex.FeedService
+	users     vex.UserService
+	jwtSecret []byte
 }
 
 func (h *Handler) GetEntries(c echo.Context) error {
@@ -49,14 +52,23 @@ func main() {
 		log.Fatal(err)
 	}
 	h := Handler{
-		feeds: vex.NewFeedService(db),
+		feeds:     vex.NewFeedService(db),
+		users:     vex.NewUserService(db),
+		jwtSecret: []byte(os.Getenv("JWT_SECRET")),
 	}
 
 	e := echo.New()
 	e.Validator = &Validator{validator: validator.New()}
 	e.Use(middleware.Logger())
+
+	r := e.Group("")
+	e.Use(echojwt.WithConfig(echojwt.Config{
+		SigningKey: h.jwtSecret,
+	}))
+
 	e.GET("/entries", h.GetEntries)
-	h.RegisterFeedsRoutes(e)
+	h.RegisterLoginRoutes(e, r)
+	h.RegisterFeedsRoutes(e, r)
 
 	e.Start(":1597")
 }

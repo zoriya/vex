@@ -25,7 +25,6 @@ func (h *Handler) AddFeed(c echo.Context) error {
 	if err = c.Validate(&req); err != nil {
 		return err
 	}
-	log.Printf("%v", req)
 
 	feed, err := h.feeds.AddFeed(req.Link, req.Tags, user)
 	if err != nil {
@@ -35,6 +34,6 @@ func (h *Handler) AddFeed(c echo.Context) error {
 	return c.JSON(201, feed)
 }
 
-func (h *Handler) RegisterFeedsRoutes(e *echo.Echo) {
-	e.POST("/feeds", h.AddFeed)
+func (h *Handler) RegisterFeedsRoutes(echo *echo.Echo, restricted *echo.Group) {
+	restricted.POST("/feeds", h.AddFeed)
 }
