@@ -15,7 +15,7 @@ func (m Model) AuthView() string {
 	)
 }
 func (m Model) EntriesView() string {
-	return m.list.View()
+	return m.textInput.View() + m.list.View()
 }
 func (m Model) FeedsView() string {
 	return fmt.Sprintf("%s ", *m.auth.Jwt)

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-	_ "log"
 	"os"
 	"strings"
 	"time"
@@ -13,6 +11,7 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	huh "github.com/charmbracelet/huh"
+	"github.com/google/uuid"
 	. "github.com/zoryia/vex/tui/models"
 	. "github.com/zoryia/vex/tui/pages"
 	"github.com/zoryia/vex/tui/pages/auth"
@@ -36,7 +35,6 @@ type Model struct {
 func New() *Model {
 	ti := textinput.New()
 	ti.Placeholder = "Pikachu"
-	ti.Focus()
 	ti.CharLimit = 156
 	ti.Width = 56
 	return &Model{textInput: ti, auth: auth.New(), page: ENTRIES, keys: NewListKeyMap(), Preview: preview.Model{Viewport: viewport.New(0, 0)}}
@@ -52,11 +50,11 @@ func (m *Model) initList(width int, height int) {
 	m.list = list.New([]list.Item{}, list.NewDefaultDelegate(), width, height)
 	m.list.Title = "Posts"
 	m.list.SetFilteringEnabled(false)
-	var f = Feed{Id: "1", Tags: []string{"Devops", "Kubernetes"}, Name: "zwindler", Url: "zwindler.blog", FaviconUrl: "zwindler.blog.favicon"}
+	var f = Feed{Id: uuid.UUID{}, Tags: []string{"Devops", "Kubernetes"}, Name: "zwindler", Url: "zwindler.blog", FaviconUrl: "zwindler.blog.favicon"}
 	m.list.SetItems([]list.Item{
-		Entry{Id: "1", ArticleTitle: "yay", Content: "ouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouin", Link: "awd", Date: time.Now(), IsRead: false, IsIgnored: false, IsReadLater: false, IsBookmarked: false, Feed: f},
-		Entry{Id: "2", ArticleTitle: "grrrrr", Content: "ouin ouin ouin", Link: "awd", Date: time.Now(), IsRead: false, IsIgnored: false, IsReadLater: false, IsBookmarked: false, Feed: f},
-		Entry{Id: "3", ArticleTitle: "my life is pain", Content: "ouin ouin ouin", Link: "awd", Date: time.Now(), IsRead: false, IsIgnored: false, IsReadLater: false, IsBookmarked: false, Feed: f},
+		Entry{Id: uuid.UUID{}, ArticleTitle: "yay", Content: "ouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouin", Link: "awd", Date: time.Now(), IsRead: false, IsIgnored: false, IsReadLater: false, IsBookmarked: false, Feed: f},
+		Entry{Id: uuid.UUID{}, ArticleTitle: "grrrrr", Content: "ouin ouin ouin", Link: "awd", Date: time.Now(), IsRead: false, IsIgnored: false, IsReadLater: false, IsBookmarked: false, Feed: f},
+		Entry{Id: uuid.UUID{}, ArticleTitle: "my life is pain", Content: "ouin ouin ouin", Link: "awd", Date: time.Now(), IsRead: false, IsIgnored: false, IsReadLater: false, IsBookmarked: false, Feed: f},
 	})
 }
 
@@ -150,6 +148,7 @@ func (m *Model) deleteWordBackward() {
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	var cmds []tea.Cmd
+	var blurredNow = false
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.initList(msg.Width, msg.Height)
@@ -180,7 +179,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else if m.page == REGISTER {
 				m.page = LOGIN
 			}
-
+		case tea.KeyEnter:
+			if m.textInput.Focused() {
+				// Get entries with query
+				m.textInput.Blur()
+				blurredNow = true
+			}
 		}
 		switch {
 		case key.Matches(msg, m.textInput.KeyMap.DeleteCharacterBackward): //TODO: add only when query
@@ -189,35 +193,32 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.deleteWordBackward()
 			}
 		case key.Matches(msg, m.keys.IgnoreToggle) && m.page == "FEEDS":
-			// TODO: ignore the post
-			return m, nil
+			var e = m.list.SelectedItem().(Entry)
+			cmds = append(cmds, ignorePost(m.auth.Jwt, e))
 
 		case key.Matches(msg, m.keys.ReadToggle):
-			// TODO: mark as read
-			return m, nil
+			var e = m.list.SelectedItem().(Entry)
+			cmds = append(cmds, toggleRead(m.auth.Jwt, e))
 
 		case key.Matches(msg, m.keys.ReadLaterToggle):
-			// TODO: add to read later
-			return m, nil
+			var e = m.list.SelectedItem().(Entry)
+			cmds = append(cmds, toggleReadLater(m.auth.Jwt, e))
 
 		case key.Matches(msg, m.keys.BookmarkToggle):
-			// TODO: toggle bookmark
-			return m, nil
+			var e = m.list.SelectedItem().(Entry)
+			cmds = append(cmds, toggleBookmark(m.auth.Jwt, e))
 
 		case key.Matches(msg, m.keys.Query):
-			// TODO: launch query input
-			return m, nil
+			m.textInput.Focus()
+			m.textInput.SetValue("")
 
-		case key.Matches(msg, m.keys.PreviewPost):
-			var e = m.list.SelectedItem()
-
-			entry := e.(Entry)
-			m.Preview.Entry = entry
-			m.Preview.Viewport.SetContent(entry.Content)
+		case key.Matches(msg, m.keys.PreviewPost) && m.textInput.Focused() == false && blurredNow == false:
+			var e = m.list.SelectedItem().(Entry)
+			m.Preview.Entry = e
+			m.Preview.Viewport.SetContent(e.Content)
 			m.page = PREVIEW
-			log.Print(entry.Content)
-			log.Print(m.Preview.Viewport.VisibleLineCount())
 		}
+
 	}
 
 	// Process the form

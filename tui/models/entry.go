@@ -5,18 +5,19 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/google/uuid"
 )
 
 type Feed struct {
-	Id         string   `json:"id"`
-	Name       string   `json:"name"`
-	Url        string   `json:"url"`
-	FaviconUrl string   `json:"faviconUrl"`
-	Tags       []string `json:"tags"`
+	Id         uuid.UUID `json:"id"`
+	Name       string    `json:"name"`
+	Url        string    `json:"url"`
+	FaviconUrl string    `json:"faviconUrl"`
+	Tags       []string  `json:"tags"`
 }
 
 type Entry struct {
-	Id           string    `json:"id"`
+	Id           uuid.UUID `json:"id"`
 	ArticleTitle string    `json:"title"`
 	Content      string    `json:"content"`
 	Link         string    `json:"link"`
