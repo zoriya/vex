@@ -85,7 +85,7 @@ func (s EntryService) Add(entries []EntryDao) error {
 
 func (s EntryService) GetEntry(id uuid.UUID, userId uuid.UUID) (Entry, error) {
 	var ret EntryDao
-	err := s.database.Select(
+	err := s.database.Get(
 		&ret,
 		`select e.*, s.*,
 		f.id as "feed.id", f.name as "feed.name", f.link as "feed.link", f.favicon_url as "feed.favicon_url",
@@ -133,8 +133,8 @@ type ChangeStatusDao struct {
 
 func (s EntryService) ChangeStatus(status ChangeStatusDao) error {
 	_, err := s.database.NamedExec(
-		`insert into entries_users (entry_id, user_id, is_read, is_bookmared, is_read_later, is_ignored)
-		values (:id, :user, :is_read, :is_bookmared, :is_read_later, :is_ignored)
+		`insert into entries_users (entry_id, user_id, is_read, is_bookmarked, is_read_later, is_ignored)
+		values (:id, :user, :is_read, :is_bookmarked, :is_read_later, :is_ignored)
 		on conflict(entry_id, user_id) do update set is_read = :is_read, is_bookmarked = :is_bookmarked, is_read_later = :is_read_later, is_ignored = :is_ignored`,
 		status,
 	)

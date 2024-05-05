@@ -43,7 +43,7 @@ func (h *Handler) ChangeUserStatus(c echo.Context) error {
 		return err
 	}
 
-	h.entries.ChangeStatus(vex.ChangeStatusDao{
+	err = h.entries.ChangeStatus(vex.ChangeStatusDao{
 		Id:           req.Id,
 		User:         user,
 		IsRead:       req.IsRead,
@@ -51,6 +51,9 @@ func (h *Handler) ChangeUserStatus(c echo.Context) error {
 		IsReadLater:  req.IsReadLater,
 		IsIgnored:    req.IsIgnored,
 	})
+	if err != nil {
+		return err
+	}
 	ret, err := h.entries.GetEntry(req.Id, user)
 	if err != nil {
 		return err
