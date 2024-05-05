@@ -13,6 +13,8 @@ create table if not exists feeds(
 	tags text[] not null,
 	submitter_id uuid not null references users(id),
 	added_date timestamp with time zone not null,
+	etag text,
+	last_fetch_date timestamp with time zone
 );
 
 create table if not exists entries(
