@@ -15,11 +15,11 @@ import (
 )
 
 func (e Entry) FilterValue() string {
-	return e.title
+	return e.ArticleTitle
 }
 
 func (e Entry) Title() string {
-	return e.title
+	return e.ArticleTitle
 }
 
 func (e Entry) Description() string {
@@ -39,31 +39,12 @@ type Model struct {
 }
 
 func New() *Model {
-	loginForm := huh.NewForm(
-		huh.NewGroup(
-			huh.NewInput().
-				Title("Username").
-				Key("username"),
-			// Validating fields is easy. The form will mark erroneous fields
-			// and display error messages accordingly.
-			// TODO:
-			// Validate(func(str string) error {
-			// 	if str == "octopus773" {
-			// 		return errors.New("Not you")
-			// 	}
-			// 	return nil
-			// })))
-			huh.NewInput().
-				Title("Password").
-				Key("password").
-				Password(true),
-		))
 	ti := textinput.New()
 	ti.Placeholder = "Pikachu"
 	ti.Focus()
 	ti.CharLimit = 156
 	ti.Width = 56
-	return &Model{textInput: ti, auth: Auth{form: loginForm, jwt: new(string)}, page: "LOGIN"}
+	return &Model{textInput: ti, auth: Auth{loginForm: getLoginForm(), registerForm: getRegisterForm(), jwt: new(string)}, page: LOGIN}
 }
 
 func (m Model) getEverything() tea.Cmd {
@@ -76,16 +57,16 @@ func (m *Model) initList(width int, height int) {
 	m.list = list.New([]list.Item{}, list.NewDefaultDelegate(), width, height)
 	m.list.Title = "Posts"
 	m.list.SetFilteringEnabled(false)
-	var f = Feed{id: "1", tags: []string{"Devops", "Kubernetes"}, name: "zwindler", url: "zwindler.blog", faviconUrl: "zwindler.blog.favicon"}
+	var f = Feed{Id: "1", Tags: []string{"Devops", "Kubernetes"}, Name: "zwindler", Url: "zwindler.blog", FaviconUrl: "zwindler.blog.favicon"}
 	m.list.SetItems([]list.Item{
-		Entry{id: "1", title: "yay", content: "ouin ouin ouin", link: "awd", date: time.Now(), isRead: false, isIgnored: false, isReadLater: false, isBookmarked: false, feed: f},
-		Entry{id: "2", title: "grrrrr", content: "ouin ouin ouin", link: "awd", date: time.Now(), isRead: false, isIgnored: false, isReadLater: false, isBookmarked: false, feed: f},
-		Entry{id: "3", title: "my life is pain", content: "ouin ouin ouin", link: "awd", date: time.Now(), isRead: false, isIgnored: false, isReadLater: false, isBookmarked: false, feed: f},
+		Entry{Id: "1", ArticleTitle: "yay", Content: "ouin ouin ouin", Link: "awd", Date: time.Now(), IsRead: false, IsIgnored: false, IsReadLater: false, IsBookmarked: false, Feed: f},
+		Entry{Id: "2", ArticleTitle: "grrrrr", Content: "ouin ouin ouin", Link: "awd", Date: time.Now(), IsRead: false, IsIgnored: false, IsReadLater: false, IsBookmarked: false, Feed: f},
+		Entry{Id: "3", ArticleTitle: "my life is pain", Content: "ouin ouin ouin", Link: "awd", Date: time.Now(), IsRead: false, IsIgnored: false, IsReadLater: false, IsBookmarked: false, Feed: f},
 	})
 }
 
 func (m Model) Init() tea.Cmd {
-	return tea.Batch(checkServer, m.auth.form.Init())
+	return tea.Batch(checkServer, m.auth.loginForm.Init(), m.auth.registerForm.Init(), checkJwt(m.auth.jwt))
 
 }
 
@@ -191,40 +172,78 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.initList(msg.Width, msg.Height)
+
+	case invalidJwtMsg:
+		m.auth.jwt = new(string)
+		m.page = LOGIN
+		return m, nil
 	case loginSuccessMsg:
 		*m.auth.jwt = msg.string
 		m.page = FEEDS
+		return m, m.getEverything()
+
+	case registerSuccessMsg:
+		*m.auth.jwt = msg.string
+		m.page = FEEDS
+		return m, m.getEverything()
 
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyCtrlC, tea.KeyEsc:
 			return m, tea.Quit
+		case tea.KeyCtrlT:
+			if m.page == LOGIN {
+				m.page = REGISTER
+			} else if m.page == REGISTER {
+				m.page = LOGIN
+			}
+
 		}
 		switch {
-		case key.Matches(msg, m.textInput.KeyMap.DeleteCharacterBackward):
+		case key.Matches(msg, m.textInput.KeyMap.DeleteCharacterBackward): //TODO: add only when query
 			words := strings.Split(m.textInput.Value(), " ")
 			if len(words) > 0 && (strings.HasPrefix(words[len(words)-1], "tag:") || strings.HasPrefix(words[len(words)-1], "feed:")) {
 				m.deleteWordBackward()
 			}
 		}
-		// if writing
 	}
 	var cmds []tea.Cmd
 
 	// Process the form
-	form, cmd := m.auth.form.Update(msg)
-	if f, ok := form.(*huh.Form); ok {
-		m.auth.form = f
-		cmds = append(cmds, cmd)
+	// LOGIN
+	if m.page == LOGIN {
+		form, cmd := m.auth.loginForm.Update(msg)
+		if f, ok := form.(*huh.Form); ok {
+			m.auth.loginForm = f
+			cmds = append(cmds, cmd)
+		}
+
+		if m.auth.loginForm.State == huh.StateCompleted {
+			username := m.auth.loginForm.GetString("email")
+			password := m.auth.loginForm.GetString("password")
+			cmds = append(cmds, login(username, password))
+		}
 	}
 
-	if m.auth.form.State == huh.StateCompleted {
-		// Quit when the form is done.
-		username := m.auth.form.GetString("username")
-		password := m.auth.form.GetString("password")
-		cmds = append(cmds, login(username, password))
-	}
+	if m.page == REGISTER {
 
+		// Process the form
+		// LOGIN
+		registerForm, cmd := m.auth.registerForm.Update(msg)
+		if f, ok := registerForm.(*huh.Form); ok {
+			m.auth.registerForm = f
+			cmds = append(cmds, cmd)
+		}
+
+		if m.auth.registerForm.State == huh.StateCompleted {
+			username := m.auth.registerForm.GetString("username")
+			password := m.auth.registerForm.GetString("password")
+			email := m.auth.registerForm.GetString("email")
+			cmds = append(cmds, register(username, password, email))
+		}
+
+	}
+	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
 	cmds = append(cmds, cmd)
 	m.textInput, cmd = m.textInput.Update(msg)
@@ -240,7 +259,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func main() {
-	tea.LogToFile("yay.log", "")
+	tea.LogToFile("vex.log", "")
 	m := New()
 	p := tea.NewProgram(m)
 	if _, err := p.Run(); err != nil {
