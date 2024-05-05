@@ -2,7 +2,6 @@ package vex
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"time"
 
@@ -84,7 +83,7 @@ func (r *Reader) ReadFeed(url string, etag string, lastModified *time.Time) (*Go
 	}
 
 	if lastModified := resp.Header.Get("Last-Modified"); lastModified != "" {
-		parsed, err := time.ParseInLocation(time.RFC1123, lastModified, gmt)
+		parsed, err := time.ParseInLocation(time.RFC1123, lastModified, time.UTC)
 		if err == nil {
 			feed.LastModified = parsed
 		}
