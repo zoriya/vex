@@ -25,7 +25,6 @@ func NewSyncService(reader *Reader, feeds *FeedService, entries *EntryService) S
 
 func (s SyncService) SyncFeed(feed Feed) error {
 	info, err := s.reader.ReadFeed(feed.Link, feed.etag, feed.lastFetchDate)
-	log.Printf("%v - %v", feed.etag, feed.lastFetchDate)
 	if err != nil {
 		return err
 	}
