@@ -42,6 +42,8 @@ services:
       - 5173:5173
     environment:
       - API_URL=http://api:1597
+    depends_on:
+      - api
 
 volumes:
   db:

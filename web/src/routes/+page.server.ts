@@ -5,8 +5,8 @@ import { get } from "svelte/store";
 const feeds: Feed[] = [
 	{
 		id: "1",
-		title: "The first feed",
-		url: "https://example.com/feed",
+		name: "The first feed",
+		link: "https://example.com/feed",
 		faviconUrl: "https://kit.svelte.dev/favicon.png",
 		tags: ["tag1", "tag2"],
 		submitterId: "1",
@@ -14,8 +14,8 @@ const feeds: Feed[] = [
 	},
 	{
 		id: "2",
-		title: "Phoronix",
-		url: "https://www.phoronix.com",
+		name: "Phoronix",
+		link: "https://www.phoronix.com",
 		faviconUrl: "https://www.phoronix.com/favicon.ico",
 		tags: ["linux", "kernel", "gnu", "gnu/linux", "gnu+linux", "gnu linux"],
 		submitterId: "1",
@@ -23,8 +23,8 @@ const feeds: Feed[] = [
 	},
 	{
 		id: "3",
-		title: "LWN.net",
-		url: "https://lwn.net",
+		name: "LWN.net",
+		link: "https://lwn.net",
 		faviconUrl: "https://lwn.net/favicon.ico",
 		tags: ["linux", "kernel", "gnu", "gnu/linux", "gnu+linux", "gnu linux"],
 		submitterId: "1",
@@ -60,9 +60,9 @@ const posts: Post[] = [
 	}
 ];
 
-export function load() {
+export async function load() {
 	return { 
-		posts: getPosts(),
+		posts: await getPosts(),
 		feeds
 	 };
 }

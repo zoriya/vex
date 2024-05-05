@@ -10,11 +10,11 @@
 
 <article>
 	<div>
-		<img src={feed.faviconUrl} alt={feed.title} />
-		<h3>{feed.title}</h3>
+		<img src={feed.faviconUrl} alt={feed.name} />
+		<h3>{feed.name}</h3>
 	</div>
 	<div>
-		<span>{feed.url}</span>
+		<span>{feed.link}</span>
 	</div>
 	{#if feed.submitter}
 		<div>

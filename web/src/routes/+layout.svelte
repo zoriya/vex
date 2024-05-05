@@ -7,7 +7,7 @@
 
 <slot></slot>
 
-<footer>
+<!-- <footer>
 	<BottomNav position="absolute" classInner="grid-cols-2">
 		<BottomNavItem btnName="Posts">
 			<HomeSolid
@@ -20,4 +20,4 @@
 			/>
 		</BottomNavItem>
 	</BottomNav>
-</footer>
+</footer> -->

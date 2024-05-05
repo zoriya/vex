@@ -33,5 +33,6 @@ export async function getPosts(token?: string) {
 	}
 	const r = await fetch(env.API_URL + '/entries', token ? opts : undefined);
 	const j = await r.json();
-	return j.posts as Post[];
+	console.log(j);
+	return j as Post[];
 }

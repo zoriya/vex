@@ -14,14 +14,16 @@
 >
 	<article>
 		<div class="origin">
-			<img src={post.feed.faviconUrl} alt={post.feed.title} />
-			<span>{post.feed.title}</span> |
-			{#if post.author}
-				<div class="author">
-					<QuillPenLine />
-					<span>{post.author}</span>
-				</div>
-				|
+			<img src={post.feed.faviconUrl} alt={post.feed.name} />
+			<span>{post.feed.name}</span> |
+			{#if post.authors?.length}
+				{#each post.authors as author}
+					<div class="author">
+						<QuillPenLine />
+						<span>{author}</span>
+					</div>
+					|
+				{/each}
 			{/if}
 			<Time
 				timestamp={post.date}

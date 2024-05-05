@@ -1,4 +1,4 @@
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { login, register } from '$lib/server/api.js';
 
 
@@ -8,9 +8,8 @@ export const actions = {
 		const email = data.get('email');
 		const password = data.get('password');
 		const token = await login(email as any, password as any);
-		return {
-			token
-		};
+		cookies.set('token', token, { path: '/', maxAge: 60 * 60 * 24 * 365 * 2 });
+		throw redirect(303, '/');
 	},
 	register: async ({ cookies, request }) => {
 		const data = await request.formData();
@@ -30,8 +29,7 @@ export const actions = {
 			})
 		}
 		const token = await register(email as any, username as any, password as any);
-		return {
-			token
-		};
+		cookies.set('token', token, { path: '/', maxAge: 60 * 60 * 24 * 365 * 2 });
+		throw redirect(303, '/');
 	},
 }
