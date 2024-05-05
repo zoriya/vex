@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
+	"log"
+	_ "log"
 	"os"
 	"strings"
 	"time"
@@ -10,32 +10,27 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	huh "github.com/charmbracelet/huh"
+	. "github.com/zoryia/vex/tui/models"
+	. "github.com/zoryia/vex/tui/pages"
+	"github.com/zoryia/vex/tui/pages/auth"
+	"github.com/zoryia/vex/tui/pages/preview"
 )
-
-func (e Entry) FilterValue() string {
-	return e.ArticleTitle
-}
-
-func (e Entry) Title() string {
-	return e.ArticleTitle
-}
-
-func (e Entry) Description() string {
-	return fmt.Sprintf("%s", "my desc") // TODO: real description
-}
 
 type Model struct {
 	list      list.Model
 	textInput textinput.Model
 	err       error
-	auth      Auth
+	auth      auth.Model
 	page      VexPage
 	query     string
 	feeds     []Feed
 	entries   []Entry
 	tags      []string
+	keys      *ListKeyMap
+	Preview   preview.Model
 }
 
 func New() *Model {
@@ -44,12 +39,12 @@ func New() *Model {
 	ti.Focus()
 	ti.CharLimit = 156
 	ti.Width = 56
-	return &Model{textInput: ti, auth: Auth{loginForm: getLoginForm(), registerForm: getRegisterForm(), jwt: new(string)}, page: LOGIN}
+	return &Model{textInput: ti, auth: auth.New(), page: ENTRIES, keys: NewListKeyMap(), Preview: preview.Model{Viewport: viewport.New(0, 0)}}
 }
 
 func (m Model) getEverything() tea.Cmd {
 	return func() tea.Msg {
-		return tea.Batch(getEntries(m.auth.jwt)) // getTags, getFeeds)
+		return tea.Batch(getEntries(m.auth.Jwt)) // getTags, getFeeds)
 	}
 }
 
@@ -59,14 +54,14 @@ func (m *Model) initList(width int, height int) {
 	m.list.SetFilteringEnabled(false)
 	var f = Feed{Id: "1", Tags: []string{"Devops", "Kubernetes"}, Name: "zwindler", Url: "zwindler.blog", FaviconUrl: "zwindler.blog.favicon"}
 	m.list.SetItems([]list.Item{
-		Entry{Id: "1", ArticleTitle: "yay", Content: "ouin ouin ouin", Link: "awd", Date: time.Now(), IsRead: false, IsIgnored: false, IsReadLater: false, IsBookmarked: false, Feed: f},
+		Entry{Id: "1", ArticleTitle: "yay", Content: "ouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouin", Link: "awd", Date: time.Now(), IsRead: false, IsIgnored: false, IsReadLater: false, IsBookmarked: false, Feed: f},
 		Entry{Id: "2", ArticleTitle: "grrrrr", Content: "ouin ouin ouin", Link: "awd", Date: time.Now(), IsRead: false, IsIgnored: false, IsReadLater: false, IsBookmarked: false, Feed: f},
 		Entry{Id: "3", ArticleTitle: "my life is pain", Content: "ouin ouin ouin", Link: "awd", Date: time.Now(), IsRead: false, IsIgnored: false, IsReadLater: false, IsBookmarked: false, Feed: f},
 	})
 }
 
 func (m Model) Init() tea.Cmd {
-	return tea.Batch(checkServer, m.auth.loginForm.Init(), m.auth.registerForm.Init(), checkJwt(m.auth.jwt))
+	return tea.Batch(m.auth.LoginForm.Init(), m.auth.RegisterForm.Init(), checkJwt(m.auth.Jwt))
 
 }
 
@@ -152,38 +147,26 @@ func (m *Model) deleteWordBackward() {
 	}
 }
 
-const url = "localhost:3000"
-
-func checkServer() tea.Msg {
-	c := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	res, err := c.Get(url)
-	if err != nil {
-		return errMsg{err}
-	}
-	defer res.Body.Close() // nolint:errcheck
-
-	return statusMsg(res.StatusCode)
-
-}
-
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+
+	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.initList(msg.Width, msg.Height)
+		m.Preview.Viewport.Width = msg.Width
+		m.Preview.Viewport.Height = msg.Height - m.Preview.VerticalMarginHeight()
 
 	case invalidJwtMsg:
-		m.auth.jwt = new(string)
+		m.auth.Jwt = new(string)
 		m.page = LOGIN
 		return m, nil
 	case loginSuccessMsg:
-		*m.auth.jwt = msg.string
+		*m.auth.Jwt = msg.string
 		m.page = FEEDS
 		return m, m.getEverything()
 
 	case registerSuccessMsg:
-		*m.auth.jwt = msg.string
+		*m.auth.Jwt = msg.string
 		m.page = FEEDS
 		return m, m.getEverything()
 
@@ -205,22 +188,50 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if len(words) > 0 && (strings.HasPrefix(words[len(words)-1], "tag:") || strings.HasPrefix(words[len(words)-1], "feed:")) {
 				m.deleteWordBackward()
 			}
+		case key.Matches(msg, m.keys.IgnoreToggle) && m.page == "FEEDS":
+			// TODO: ignore the post
+			return m, nil
+
+		case key.Matches(msg, m.keys.ReadToggle):
+			// TODO: mark as read
+			return m, nil
+
+		case key.Matches(msg, m.keys.ReadLaterToggle):
+			// TODO: add to read later
+			return m, nil
+
+		case key.Matches(msg, m.keys.BookmarkToggle):
+			// TODO: toggle bookmark
+			return m, nil
+
+		case key.Matches(msg, m.keys.Query):
+			// TODO: launch query input
+			return m, nil
+
+		case key.Matches(msg, m.keys.PreviewPost):
+			var e = m.list.SelectedItem()
+
+			entry := e.(Entry)
+			m.Preview.Entry = entry
+			m.Preview.Viewport.SetContent(entry.Content)
+			m.page = PREVIEW
+			log.Print(entry.Content)
+			log.Print(m.Preview.Viewport.VisibleLineCount())
 		}
 	}
-	var cmds []tea.Cmd
 
 	// Process the form
 	// LOGIN
 	if m.page == LOGIN {
-		form, cmd := m.auth.loginForm.Update(msg)
+		form, cmd := m.auth.LoginForm.Update(msg)
 		if f, ok := form.(*huh.Form); ok {
-			m.auth.loginForm = f
+			m.auth.LoginForm = f
 			cmds = append(cmds, cmd)
 		}
 
-		if m.auth.loginForm.State == huh.StateCompleted {
-			username := m.auth.loginForm.GetString("email")
-			password := m.auth.loginForm.GetString("password")
+		if m.auth.LoginForm.State == huh.StateCompleted {
+			username := m.auth.LoginForm.GetString("email")
+			password := m.auth.LoginForm.GetString("password")
 			cmds = append(cmds, login(username, password))
 		}
 	}
@@ -229,21 +240,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Process the form
 		// LOGIN
-		registerForm, cmd := m.auth.registerForm.Update(msg)
+		registerForm, cmd := m.auth.RegisterForm.Update(msg)
 		if f, ok := registerForm.(*huh.Form); ok {
-			m.auth.registerForm = f
+			m.auth.RegisterForm = f
 			cmds = append(cmds, cmd)
 		}
 
-		if m.auth.registerForm.State == huh.StateCompleted {
-			username := m.auth.registerForm.GetString("username")
-			password := m.auth.registerForm.GetString("password")
-			email := m.auth.registerForm.GetString("email")
+		if m.auth.RegisterForm.State == huh.StateCompleted {
+			username := m.auth.RegisterForm.GetString("username")
+			password := m.auth.RegisterForm.GetString("password")
+			email := m.auth.RegisterForm.GetString("email")
 			cmds = append(cmds, register(username, password, email))
 		}
 
 	}
+
 	var cmd tea.Cmd
+	m.Preview.Viewport, cmd = m.Preview.Viewport.Update(msg)
+	cmds = append(cmds, cmd)
 	m.list, cmd = m.list.Update(msg)
 	cmds = append(cmds, cmd)
 	m.textInput, cmd = m.textInput.Update(msg)
@@ -261,7 +275,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func main() {
 	tea.LogToFile("vex.log", "")
 	m := New()
-	p := tea.NewProgram(m)
+	p := tea.NewProgram(m,
+		tea.WithAltScreen(), // use the full size of the terminal in its "alternate screen buffer"
+		tea.WithMouseCellMotion(),
+	)
 	if _, err := p.Run(); err != nil {
 		os.Exit(1)
 	}

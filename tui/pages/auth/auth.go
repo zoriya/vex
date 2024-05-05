@@ -1,13 +1,14 @@
-package main
+package auth
 
 import (
+	"github.com/badoux/checkmail"
 	huh "github.com/charmbracelet/huh"
 )
 
-type Auth struct {
-	loginForm    *huh.Form
-	registerForm *huh.Form
-	jwt          *string
+type Model struct {
+	LoginForm    *huh.Form
+	RegisterForm *huh.Form
+	Jwt          *string
 }
 
 func getLoginForm() *huh.Form {
@@ -15,7 +16,14 @@ func getLoginForm() *huh.Form {
 		huh.NewGroup(
 			huh.NewInput().
 				Title("Email").
-				Key("email"),
+				Key("email").Validate(
+				func(s string) error {
+					err := checkmail.ValidateFormat(s)
+					if err != nil {
+						return err
+					}
+					return nil
+				}),
 			huh.NewInput().
 				Title("Password").
 				Key("password").
@@ -28,7 +36,14 @@ func getRegisterForm() *huh.Form {
 		huh.NewGroup(
 			huh.NewInput().
 				Title("Email").
-				Key("email"),
+				Key("email").Validate(
+				func(s string) error {
+					err := checkmail.ValidateFormat(s)
+					if err != nil {
+						return err
+					}
+					return nil
+				}),
 			huh.NewInput().
 				Title("Username").
 				Key("username"),
@@ -41,4 +56,9 @@ func getRegisterForm() *huh.Form {
 				Key("password_repeat").
 				Password(true),
 		)).WithWidth(40)
+}
+
+func New() Model {
+	return Model{RegisterForm: getRegisterForm(), LoginForm: getLoginForm(), Jwt: new(string)}
+
 }

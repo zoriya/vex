@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/zoryia/vex/tui/models"
 )
 
 type statusMsg int
@@ -133,7 +134,7 @@ func register(username string, password string, email string) tea.Cmd {
 	}
 }
 
-type getEntriesSuccessMsg []Entry
+type getEntriesSuccessMsg []models.Entry
 
 func getEntries(jwt *string) tea.Cmd {
 	return func() tea.Msg {
@@ -148,7 +149,7 @@ func getEntries(jwt *string) tea.Cmd {
 		if err != nil {
 			return httpErrorMsg(err)
 		}
-		var entries []Entry
+		var entries []models.Entry
 		err = json.Unmarshal(data, &entries)
 		if err != nil {
 			return httpErrorMsg(err)
@@ -157,7 +158,7 @@ func getEntries(jwt *string) tea.Cmd {
 	}
 }
 
-type getFeedsSuccessMsg []Feed
+type getFeedsSuccessMsg []models.Feed
 
 func getFeeds(jwt *string) tea.Cmd {
 	return func() tea.Msg {
@@ -171,7 +172,7 @@ func getFeeds(jwt *string) tea.Cmd {
 		if err != nil {
 			return httpErrorMsg(err)
 		}
-		var feeds []Feed
+		var feeds []models.Feed
 		err = json.Unmarshal(data, &feeds)
 		if err != nil {
 			return httpErrorMsg(err)
