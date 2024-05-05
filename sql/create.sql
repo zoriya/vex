@@ -13,6 +13,9 @@ create table if not exists feeds(
 	tags text[] not null,
 	submitter_id uuid not null references users(id),
 	added_date timestamp with time zone not null,
+	etag text,
+	last_fetch_date timestamp with time zone,
+	sync_error text
 );
 
 create table if not exists entries(
@@ -22,7 +25,7 @@ create table if not exists entries(
 	link text not null,
 	date timestamp with time zone not null,
 	content text not null,
-	author text
+	authors text[] not null
 );
 
 create table if not exists entries_users(
@@ -32,6 +35,6 @@ create table if not exists entries_users(
 	is_bookmarked bool not null,
 	is_read_later bool not null,
 	is_ignored bool not null,
-	constraint entries_users_pk primary key(user_id, feed_id)
+	constraint entries_users_pk primary key (user_id, feed_id)
 );
 

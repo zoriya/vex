@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 type Entry struct {
@@ -13,7 +14,7 @@ type Entry struct {
 	Link    string    `json:"link"`
 	Date    time.Time `json:"date"`
 	Content string    `json:"content"`
-	Author  *string   `json:"author"`
+	Authors []string  `json:"authors"`
 	FeedId  uuid.UUID `json:"feedId"`
 	Feed    Feed      `json:"feed,omitempty"`
 }
@@ -24,7 +25,7 @@ type EntryDao struct {
 	Link    string
 	Date    time.Time
 	Content string
-	Author  *string
+	Authors pq.StringArray
 	FeedId  uuid.UUID `db:"feed_id"`
 	Feed    FeedDao   `db:"feed"`
 }
@@ -36,7 +37,7 @@ func (e *EntryDao) ToEntry() Entry {
 		Link:    e.Link,
 		Date:    e.Date,
 		Content: e.Content,
-		Author:  e.Author,
+		Authors: e.Authors,
 		FeedId:  e.FeedId,
 		Feed:    e.Feed.ToFeed(),
 	}
@@ -48,6 +49,15 @@ type EntryService struct {
 
 func NewEntryService(db *sqlx.DB) EntryService {
 	return EntryService{database: db}
+}
+
+func (s EntryService) Add(entries []EntryDao) error {
+	_, err := s.database.NamedExec(
+		`insert into entries (id, title, link, date, content, authors, feed_id)
+		values (:id, :title, :link, :date, :content, :authors, :feed_id)`,
+		entries,
+	)
+	return err
 }
 
 func (s EntryService) ListEntries() ([]Entry, error) {

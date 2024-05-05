@@ -4,5 +4,6 @@
       go
       wgo
       pgformatter
+      postgresql
     ];
   }
