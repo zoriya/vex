@@ -1,4 +1,6 @@
 import type { Post, Feed } from "$lib/types";
+import { getPosts } from "$lib/server/api";
+import { get } from "svelte/store";
 
 const feeds: Feed[] = [
 	{
@@ -41,7 +43,7 @@ const posts: Post[] = [
 		isBookmarked: false,
 		isIgnored: false,
 		isReadLater: false,
-		author: "John Doe",
+		authors: ["John Doe"],
 		feed: feeds[0],
 	},
 	{
@@ -60,7 +62,7 @@ const posts: Post[] = [
 
 export function load() {
 	return { 
-		posts,
+		posts: getPosts(),
 		feeds
 	 };
 }
