@@ -4,11 +4,12 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	huh "github.com/charmbracelet/huh"
-
 	. "github.com/zoryia/vex/tui/models"
 	. "github.com/zoryia/vex/tui/pages"
+	"github.com/zoryia/vex/tui/pages/feeds"
 )
 
 func (m Model) LoginUpdate(msg tea.Msg) (tea.Model, []tea.Cmd) {
@@ -28,6 +29,13 @@ func (m Model) GlobalUpdate(msg tea.Msg) (Model, tea.Cmd) {
 		m.Preview.Viewport.Height = msg.Height - m.Preview.VerticalMarginHeight()
 		m.Feeds.List.SetWidth(msg.Width)
 		m.Feeds.List.SetHeight(msg.Height)
+
+	case getEntriesSuccessMsg:
+		var entries []list.Item
+		for _, e := range msg {
+			entries = append(entries, e)
+		}
+		m.list.SetItems(entries)
 
 	case invalidJwtMsg:
 		m.Auth.Jwt = new(string)
@@ -170,7 +178,31 @@ func entriesUpdate(m Model, msg tea.Msg) (Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 func feedsUpdate(m Model, msg tea.Msg) (Model, tea.Cmd) {
-	return m, nil
+	var cmds []tea.Cmd
+	var cmd tea.Cmd
+
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch {
+		case key.Matches(msg, feeds.FeedsKeyMaps().AddFeed):
+			m.Feeds.AddFeed.Run()
+		}
+	}
+	registerForm, cmd := m.Auth.RegisterForm.Update(msg)
+	if f, ok := registerForm.(*huh.Form); ok {
+		m.Auth.RegisterForm = f
+		cmds = append(cmds, cmd)
+	}
+
+	if m.Auth.RegisterForm.State == huh.StateCompleted {
+		url := m.Auth.RegisterForm.GetString("url")
+		tags := m.Auth.RegisterForm.Get("tags").([]string)
+		cmds = append(cmds, addFeed(m.Auth.Jwt, url, tags))
+	}
+	m.Feeds.List, cmd = m.Feeds.List.Update(msg)
+	cmds = append(cmds, cmd)
+
+	return m, tea.Batch(cmds...)
 }
 func tagsUpdate(m Model, msg tea.Msg) (Model, tea.Cmd) {
 	return m, nil

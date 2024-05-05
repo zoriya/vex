@@ -12,14 +12,14 @@ type Entry struct {
 	ArticleTitle string    `json:"title"`
 	Content      string    `json:"content"`
 	Link         string    `json:"link"`
-	Date         time.Time `json:"time"`
+	Date         time.Time `json:"date"`
 
-	Author       *string `json:"author"` // author not always specified
-	IsRead       bool    `json:"isRead"`
-	IsBookmarked bool    `json:"IsBookmarked"`
-	IsIgnored    bool    `json:"isIgnored"`
-	IsReadLater  bool    `json:"isReadLater"`
-	Feed         Feed    `json:"feed"`
+	Authors      []string `json:"authors"` // author not always specified
+	IsRead       bool     `json:"isRead"`
+	IsBookmarked bool     `json:"IsBookmarked"`
+	IsIgnored    bool     `json:"isIgnored"`
+	IsReadLater  bool     `json:"isReadLater"`
+	Feed         Feed     `json:"feed"`
 }
 
 func (e Entry) FilterValue() string {

@@ -54,9 +54,7 @@ func New() *Model {
 }
 
 func (m Model) getEverything() tea.Cmd {
-	return func() tea.Msg {
-		return tea.Batch(getEntries(m.Auth.Jwt)) // getTags, getFeeds)
-	}
+	return tea.Batch(getEntries(m.Auth.Jwt)) // getTags, getFeeds)
 }
 
 func (m *Model) initList(width int, height int) {

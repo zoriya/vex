@@ -138,23 +138,36 @@ func register(username string, password string, email string) tea.Cmd {
 type getEntriesSuccessMsg []models.Entry
 
 func getEntries(jwt *string) tea.Cmd {
+	log.Print("yey")
 	return func() tea.Msg {
+		log.Print("oula")
 		url := fmt.Sprintf("%s/entries", serverUrl)
-		req, _ := http.NewRequest(http.MethodGet, url, nil)
+		req, err := http.NewRequest(http.MethodGet, url, nil)
+		if err != nil {
+			log.Print(err)
+			return http.ErrMissingBoundary
+		}
 		if jwt == nil {
+			log.Print("uhu?")
 			return missingJwtMsg{}
 		}
 		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", *jwt))
 		req.Header.Add("Content-type", "application/json")
+		log.Print("b")
 		data, err := getData(req)
+		log.Print("c")
 		if err != nil {
+			log.Print(err)
 			return httpErrorMsg(err)
 		}
 		var entries []models.Entry
 		err = json.Unmarshal(data, &entries)
 		if err != nil {
+			log.Print(err)
 			return httpErrorMsg(err)
 		}
+		log.Print("a")
+		log.Print(entries)
 		return getEntriesSuccessMsg(entries)
 	}
 }
@@ -179,6 +192,38 @@ func getFeeds(jwt *string) tea.Cmd {
 			return httpErrorMsg(err)
 		}
 		return getFeedsSuccessMsg(feeds)
+	}
+}
+
+type addFeedSuccessMsg struct{}
+
+func addFeed(jwt *string, link string, tags []string) tea.Cmd {
+	return func() tea.Msg {
+
+		url := fmt.Sprintf("%s/feeds", serverUrl)
+		body := struct {
+			Link string   `json:"link"`
+			Tags []string `json:"tags"`
+		}{
+			Link: link, Tags: tags,
+		}
+		out, err := json.Marshal(body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(out))
+		req.Header.Add("Content-type", "application/json")
+		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", *jwt))
+		data, err := getData(req)
+		if err != nil {
+			return err
+		}
+		var addFeedResp AuthRes
+		err = json.Unmarshal(data, &addFeedResp)
+		if err != nil {
+			return httpErrorMsg(err)
+		}
+		return addFeedSuccessMsg{}
 	}
 }
 
