@@ -2,7 +2,6 @@ package vex
 
 import (
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,14 +10,16 @@ import (
 )
 
 type Feed struct {
-	Id          uuid.UUID `json:"id"`
-	Name        string    `json:"name"`
-	Link        string    `json:"link"`
-	FaviconUrl  string    `json:"faviconUrl"`
-	Tags        []string  `json:"tags"`
-	SubmitterId uuid.UUID `json:"submitterId"`
-	Submitter   *User     `json:"submitter,omitempty"`
-	AddedDate   time.Time `json:"addedDate"`
+	Id            uuid.UUID `json:"id"`
+	Name          string    `json:"name"`
+	Link          string    `json:"link"`
+	FaviconUrl    string    `json:"faviconUrl"`
+	Tags          []string  `json:"tags"`
+	SubmitterId   uuid.UUID `json:"submitterId"`
+	Submitter     *User     `json:"submitter,omitempty"`
+	AddedDate     time.Time `json:"addedDate"`
+	etag          string
+	lastFetchDate *time.Time
 }
 
 type FeedDao struct {
@@ -36,39 +37,43 @@ type FeedDao struct {
 
 func (f *FeedDao) ToFeed() Feed {
 	return Feed{
-		Id:          f.Id,
-		Name:        f.Name,
-		Link:        f.Link,
-		FaviconUrl:  f.FaviconUrl,
-		Tags:        f.Tags,
-		SubmitterId: f.SubmitterId,
-		Submitter:   f.Submitter,
-		AddedDate:   f.AddedDate,
+		Id:            f.Id,
+		Name:          f.Name,
+		Link:          f.Link,
+		FaviconUrl:    f.FaviconUrl,
+		Tags:          f.Tags,
+		SubmitterId:   f.SubmitterId,
+		Submitter:     f.Submitter,
+		AddedDate:     f.AddedDate,
+		etag:          f.Etag,
+		lastFetchDate: f.LastFetchDate,
 	}
 }
 
 func (f *Feed) ToDao() FeedDao {
 	return FeedDao{
-		Id:          f.Id,
-		Name:        f.Name,
-		Link:        f.Link,
-		FaviconUrl:  f.FaviconUrl,
-		Tags:        f.Tags,
-		SubmitterId: f.SubmitterId,
-		Submitter:   f.Submitter,
-		AddedDate:   f.AddedDate,
+		Id:            f.Id,
+		Name:          f.Name,
+		Link:          f.Link,
+		FaviconUrl:    f.FaviconUrl,
+		Tags:          f.Tags,
+		SubmitterId:   f.SubmitterId,
+		Submitter:     f.Submitter,
+		AddedDate:     f.AddedDate,
+		Etag:          f.etag,
+		LastFetchDate: f.lastFetchDate,
 	}
 }
 
 type FeedService struct {
 	database *sqlx.DB
-	reader   Reader
+	reader   *Reader
 }
 
-func NewFeedService(db *sqlx.DB) FeedService {
+func NewFeedService(db *sqlx.DB, reader *Reader) FeedService {
 	return FeedService{
 		database: db,
-		reader:   NewRssReader(http.DefaultClient),
+		reader:   reader,
 	}
 }
 

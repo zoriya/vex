@@ -47,12 +47,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	reader := vex.NewRssReader(http.DefaultClient)
 	h := Handler{
-		feeds:     vex.NewFeedService(db),
+		feeds:     vex.NewFeedService(db, &reader),
 		entries:   vex.NewEntryService(db),
 		users:     vex.NewUserService(db),
 		jwtSecret: []byte(os.Getenv("JWT_SECRET")),
 	}
+	sync := vex.NewSyncService(&reader, &h.feeds, &h.entries)
+
+	go sync.SyncFeedsForever()
 
 	e := echo.New()
 	e.Validator = &Validator{validator: validator.New()}
