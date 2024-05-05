@@ -25,14 +25,12 @@ export async function register(email: string, username: string, password: string
 	return j.token as string;
 }
 
-export async function getPosts(token?: string) {
-	const opts = {
+export async function getPosts(token: string) {
+	const r = await fetch(env.API_URL + '/entries', {
 		headers: {
 			Authorization: `Bearer ${token}`
 		}
-	}
-	const r = await fetch(env.API_URL + '/entries', token ? opts : undefined);
+	});
 	const j = await r.json();
-	console.log(j);
 	return j as Post[];
 }

@@ -87,15 +87,14 @@
 	{/if}
 
 	{#if order !== "default"}
-		<div class="font-light text-sm text-slate-500">
+		<div class="font-light text-sm text-slate-500 flex gap-2">
 			<span>{post.feed.name}</span> |
 			{#if post.authors?.length}
 				{#each post.authors as author}
-					<div class="author">
+					<div class="flex gap-1 items-center">
 						<QuillPenLine />
 						<span>{author}</span>
-					</div>
-					|
+					</div> |
 				{/each}
 			{/if}
 			<Time

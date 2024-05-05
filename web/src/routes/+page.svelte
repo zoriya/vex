@@ -6,7 +6,10 @@
 		Skeleton,
 		ImagePlaceholder,
 		Avatar,
+		Button,
 		P,
+		Search,
+		MultiSelect,
 	} from "flowbite-svelte";
 	import List from "$lib/posts/list.svelte";
 	import { CalendarWeekSolid } from "flowbite-svelte-icons";
@@ -35,12 +38,24 @@
 			dateStr,
 		};
 	});
+	let selected: string[] = [];
+	let countries = [
+		{ value: "us", name: "United States" },
+		{ value: "ca", name: "Canada" },
+		{ value: "fr", name: "France" },
+		{ value: "jp", name: "Japan" },
+		{ value: "en", name: "England" },
+	];
 </script>
 
+<MultiSelect items={countries} bind:value={selected} size="lg" />
+<Search>
+	<Button>Search</Button>
+</Search>
 <main>
 	<Timeline order="vertical" class="max-w-3xl">
 		{#each displayPosts as post}
-			<TimelineItem title={post.title} date={post.dateStr} post={post}>
+			<TimelineItem title={post.title} date={post.dateStr} {post}>
 				<svelte:fragment slot="icon">
 					<span
 						class="flex absolute -start-3 justify-center items-center w-6 h-6 bg-primary-200 rounded-full ring-8 ring-white dark:ring-gray-900 dark:bg-primary-900"

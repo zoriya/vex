@@ -60,10 +60,11 @@ const posts: Post[] = [
 	}
 ];
 
-export async function load() {
-	return { 
-		posts: await getPosts(),
+export async function load({ cookies }) {
+	const token = cookies.get("token");
+	return {
+		posts: await getPosts(token),
 		feeds
-	 };
+	};
 }
 
