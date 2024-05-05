@@ -104,6 +104,7 @@ func (s FeedService) AddFeed(feed Feed) (Feed, error) {
 	if err != nil {
 		return Feed{}, err
 	}
+
 	return feed, nil
 }
 

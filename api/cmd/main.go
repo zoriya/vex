@@ -19,6 +19,7 @@ type Handler struct {
 	feeds     vex.FeedService
 	entries   vex.EntryService
 	users     vex.UserService
+	sync      vex.SyncService
 	jwtSecret []byte
 }
 
@@ -55,9 +56,8 @@ func main() {
 		users:     vex.NewUserService(db),
 		jwtSecret: []byte(os.Getenv("JWT_SECRET")),
 	}
-	sync := vex.NewSyncService(&reader, &h.feeds, &h.entries)
-
-	go sync.SyncFeedsForever()
+	h.sync = vex.NewSyncService(&reader, &h.feeds, &h.entries)
+	go h.sync.SyncFeedsForever()
 
 	e := echo.New()
 	e.Validator = &Validator{validator: validator.New()}

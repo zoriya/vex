@@ -51,6 +51,7 @@ func (h *Handler) AddFeed(c echo.Context) error {
 		log.Printf("Add feed error: %v", err)
 		return echo.NewHTTPError(500, "internal server error")
 	}
+	h.sync.SyncFeed(feed)
 	return c.JSON(201, feed)
 }
 

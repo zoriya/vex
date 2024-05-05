@@ -30,10 +30,17 @@ create table if not exists entries(
 
 create table if not exists entries_users(
 	user_id uuid not null references users(id),
-	feed_id uuid not null references feeds(id),
+	entry_id uuid not null references entries(id),
 	is_read bool not null,
 	is_bookmarked bool not null,
 	is_read_later bool not null,
+	is_ignored bool not null,
+	constraint entries_users_pk primary key (user_id, entry_id)
+);
+
+create table if not exists feeds_users(
+	user_id uuid not null references users(id),
+	feed_id uuid not null references feeds(id),
 	is_ignored bool not null,
 	constraint entries_users_pk primary key (user_id, feed_id)
 );
