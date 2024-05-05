@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -35,7 +36,17 @@ func (h *Handler) AddFeed(c echo.Context) error {
 		return err
 	}
 
-	feed, err := h.feeds.AddFeed(req.Link, req.Tags, user)
+	feeds, err := h.feeds.GetFeedData(req.Link)
+	if err != nil {
+		return echo.NewHTTPError(400, fmt.Sprintf("Invalid feed link: %v", err))
+	}
+	if len(feeds) != 1 {
+		return c.JSON(409, feeds)
+	}
+	feed := feeds[0]
+	feed.SubmitterId = user
+	feed.Tags = req.Tags
+	feed, err = h.feeds.AddFeed(feed)
 	if err != nil {
 		log.Printf("Add feed error: %v", err)
 		return echo.NewHTTPError(500, "internal server error")
