@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/charmbracelet/lipgloss"
 	. "github.com/zoryia/vex/tui/pages"
 )
@@ -10,15 +8,15 @@ import (
 func (m Model) AuthView() string {
 	return lipgloss.JoinHorizontal(
 		lipgloss.Left,
-		m.auth.LoginForm.View(),
-		m.auth.RegisterForm.View(),
+		m.Auth.LoginForm.View(),
+		m.Auth.RegisterForm.View(),
 	)
 }
 func (m Model) EntriesView() string {
-	return lipgloss.JoinVertical(lipgloss.Left, m.textInput.View(), m.list.View())
+	return lipgloss.JoinVertical(lipgloss.Left, m.queryInput.View(), m.list.View())
 }
 func (m Model) FeedsView() string {
-	return fmt.Sprintf("%s ", *m.auth.Jwt)
+	return m.Feeds.View()
 }
 func (m Model) TagsView() string {
 	return ""
