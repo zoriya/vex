@@ -1,7 +1,7 @@
 <script lang="ts">
 	export let tags: string[] = [];
+    export let nbNonExpandedTags = tags.length;
 
-    const nbNonExpandedTags = 5;
     let isExpanded = false;
     $: tagsToDisplay = isExpanded ? tags : tags.slice(0, nbNonExpandedTags);
 </script>

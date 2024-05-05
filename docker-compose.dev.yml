@@ -31,5 +31,19 @@ services:
       timeout: 5s
       retries: 5
 
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+    restart: on-failure
+    volumes:
+      - ./web:/app
+    ports:
+      - 5173:5173
+    environment:
+      - API_URL=http://api:1597
+    depends_on:
+      - api
+
 volumes:
   db:

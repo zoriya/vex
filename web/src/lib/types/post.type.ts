@@ -7,7 +7,7 @@ export type Post = {
 	link: string;
 	date: Date;
 
-	author?: string;
+	authors?: string[];
 	isRead: boolean;
 	isBookmarked: boolean;
 	isIgnored: boolean;
