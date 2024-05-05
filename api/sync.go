@@ -55,8 +55,7 @@ func (s SyncService) SyncFeed(feed Feed) error {
 	if err != nil {
 		return err
 	}
-	// TODO: update etag and last fetch date of feed
-	return nil
+	return s.feeds.UpdateSyncStatus(feed.Id, info.ETag, &info.LastModified)
 }
 
 func (s SyncService) SyncFeeds() error {
@@ -69,7 +68,7 @@ func (s SyncService) SyncFeeds() error {
 		err := s.SyncFeed(feed)
 		if err != nil {
 			log.Printf("Could not sync feed %v: %v", feed.Link, err)
-			// TODO: s.feeds.SaveError(feed.Id, err)
+			s.feeds.SaveSyncError(feed.Id, err)
 		}
 	}
 	return nil

@@ -18,6 +18,7 @@ type Feed struct {
 	SubmitterId   uuid.UUID `json:"submitterId"`
 	Submitter     *User     `json:"submitter,omitempty"`
 	AddedDate     time.Time `json:"addedDate"`
+	SyncErorr     *string   `json:"syncError,omitempty"`
 	etag          string
 	lastFetchDate *time.Time
 }
@@ -31,6 +32,7 @@ type FeedDao struct {
 	SubmitterId   uuid.UUID `db:"submitter_id"`
 	Submitter     *User     `db:"submitter"`
 	AddedDate     time.Time `db:"added_date"`
+	SyncErorr     *string   `db:"sync_error"`
 	Etag          string
 	LastFetchDate *time.Time `db:"last_fetch_date"`
 }
@@ -118,4 +120,30 @@ func (s FeedService) ListFeeds() ([]Feed, error) {
 		return nil, err
 	}
 	return Map(ret, func(f FeedDao, _ int) Feed { return f.ToFeed() }), nil
+}
+
+func (s FeedService) UpdateSyncStatus(id uuid.UUID, etag string, lastFetchDate *time.Time) error {
+	_, err := s.database.NamedExec(
+		`update feeds set etag = :etag, last_fetch_date = :date, sync_error = :err
+		where id = :id`,
+		map[string]interface{}{
+			"id":   id,
+			"etag": etag,
+			"date": lastFetchDate,
+			"err":  nil,
+		},
+	)
+	return err
+}
+
+func (s FeedService) SaveSyncError(id uuid.UUID, error error) error {
+	_, err := s.database.NamedExec(
+		`update feeds set sync_error = :err
+		where id = :i`,
+		map[string]interface{}{
+			"id":  id,
+			"err": error.Error(),
+		},
+	)
+	return err
 }

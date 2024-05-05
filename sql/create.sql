@@ -14,7 +14,8 @@ create table if not exists feeds(
 	submitter_id uuid not null references users(id),
 	added_date timestamp with time zone not null,
 	etag text,
-	last_fetch_date timestamp with time zone
+	last_fetch_date timestamp with time zone,
+	sync_error text
 );
 
 create table if not exists entries(
