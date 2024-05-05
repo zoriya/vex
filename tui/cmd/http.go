@@ -138,9 +138,7 @@ func register(username string, password string, email string) tea.Cmd {
 type getEntriesSuccessMsg []models.Entry
 
 func getEntries(jwt *string) tea.Cmd {
-	log.Print("yey")
 	return func() tea.Msg {
-		log.Print("oula")
 		url := fmt.Sprintf("%s/entries", serverUrl)
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
@@ -148,14 +146,11 @@ func getEntries(jwt *string) tea.Cmd {
 			return http.ErrMissingBoundary
 		}
 		if jwt == nil {
-			log.Print("uhu?")
 			return missingJwtMsg{}
 		}
 		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", *jwt))
 		req.Header.Add("Content-type", "application/json")
-		log.Print("b")
 		data, err := getData(req)
-		log.Print("c")
 		if err != nil {
 			log.Print(err)
 			return httpErrorMsg(err)
@@ -166,8 +161,6 @@ func getEntries(jwt *string) tea.Cmd {
 			log.Print(err)
 			return httpErrorMsg(err)
 		}
-		log.Print("a")
-		log.Print(entries)
 		return getEntriesSuccessMsg(entries)
 	}
 }
