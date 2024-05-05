@@ -34,7 +34,7 @@ type Model struct {
 
 func New() *Model {
 	ti := textinput.New()
-	ti.Placeholder = "Pikachu"
+	ti.Placeholder = "Search Query"
 	ti.CharLimit = 156
 	ti.Width = 56
 	return &Model{textInput: ti, auth: auth.New(), page: ENTRIES, keys: NewListKeyMap(), Preview: preview.Model{Viewport: viewport.New(0, 0)}}
@@ -50,6 +50,22 @@ func (m *Model) initList(width int, height int) {
 	m.list = list.New([]list.Item{}, list.NewDefaultDelegate(), width, height)
 	m.list.Title = "Posts"
 	m.list.SetFilteringEnabled(false)
+	m.list.AdditionalShortHelpKeys = func() []key.Binding {
+		return []key.Binding{
+			m.keys.Query,
+			m.keys.PreviewPost,
+		}
+	}
+	m.list.AdditionalFullHelpKeys = func() []key.Binding {
+		return []key.Binding{
+			m.keys.ReadToggle,
+			m.keys.ReadLaterToggle,
+			m.keys.BookmarkToggle,
+			m.keys.IgnoreToggle,
+			m.keys.Query,
+			m.keys.PreviewPost,
+		}
+	}
 	var f = Feed{Id: uuid.UUID{}, Tags: []string{"Devops", "Kubernetes"}, Name: "zwindler", Url: "zwindler.blog", FaviconUrl: "zwindler.blog.favicon"}
 	m.list.SetItems([]list.Item{
 		Entry{Id: uuid.UUID{}, ArticleTitle: "yay", Content: "ouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouinouin ouin ouin", Link: "awd", Date: time.Now(), IsRead: false, IsIgnored: false, IsReadLater: false, IsBookmarked: false, Feed: f},
@@ -151,7 +167,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var blurredNow = false
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.initList(msg.Width, msg.Height)
+		m.initList(msg.Width, msg.Height-2)
+		m.textInput.Width = msg.Width - 5
 		m.Preview.Viewport.Width = msg.Width
 		m.Preview.Viewport.Height = msg.Height - m.Preview.VerticalMarginHeight()
 

@@ -73,8 +73,7 @@ func NewListKeyMap() *ListKeyMap {
 
 		IgnoreToggle: key.NewBinding(
 			key.WithKeys("x", "d"),
-			key.WithHelp("x", "ignore post"),
-			key.WithHelp("d", "ignore post"),
+			key.WithHelp("d/x", "ignore post"),
 		),
 		ReadLaterToggle: key.NewBinding(
 			key.WithKeys("m"),
