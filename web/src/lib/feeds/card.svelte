@@ -5,7 +5,7 @@
 	export let feed: Feed;
 
 	let viewTags = false;
-    let hover = false;
+	let hover = false;
 </script>
 
 <article>

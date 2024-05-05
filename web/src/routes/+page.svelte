@@ -48,10 +48,10 @@
 	];
 </script>
 
-<MultiSelect items={countries} bind:value={selected} size="lg" />
+<!-- <MultiSelect items={countries} bind:value={selected} size="lg" />
 <Search>
 	<Button>Search</Button>
-</Search>
+</Search> -->
 <main>
 	<Timeline order="vertical" class="max-w-3xl">
 		{#each displayPosts as post}
