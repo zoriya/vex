@@ -2,7 +2,6 @@ package vex
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -28,6 +27,8 @@ type GoFeed struct {
 	LastModified time.Time
 }
 
+var gmt, _ = time.LoadLocation("GMT")
+
 func (r *Reader) ReadFeed(url string, etag string, lastModified *time.Time) (*GoFeed, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -38,10 +39,10 @@ func (r *Reader) ReadFeed(url string, etag string, lastModified *time.Time) (*Go
 	req.Header.Set("User-Agent", "Gofeed/1.0")
 
 	if etag != "" {
-		req.Header.Set("If-None-Match", fmt.Sprintf(`"%s"`, etag))
+		req.Header.Set("If-None-Match", etag)
 	}
 	if lastModified != nil {
-		req.Header.Set("If-Modified-Since", lastModified.Format(time.RFC1123))
+		req.Header.Set("If-Modified-Since", lastModified.In(gmt).Format(time.RFC1123))
 	}
 
 	resp, err := r.client.Do(req)

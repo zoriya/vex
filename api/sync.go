@@ -25,14 +25,15 @@ func NewSyncService(reader *Reader, feeds *FeedService, entries *EntryService) S
 
 func (s SyncService) SyncFeed(feed Feed) error {
 	info, err := s.reader.ReadFeed(feed.Link, feed.etag, feed.lastFetchDate)
+	log.Printf("%v - %v", feed.etag, feed.lastFetchDate)
 	if err != nil {
 		return err
 	}
 	if info == nil {
-		// no new items
+		log.Printf("Feed %v is uptodate", feed.Link)
 		return nil
 	}
-	log.Printf("Adding %v new entries", len(info.Items))
+	log.Printf("Adding %v new entries from %v", len(info.Items), feed.Link)
 	entries := Map(info.Items, func(item *gofeed.Item, _ int) EntryDao {
 		var date time.Time
 		if item.PublishedParsed != nil {
