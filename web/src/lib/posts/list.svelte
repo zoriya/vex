@@ -4,24 +4,23 @@
 	export let posts: Post[] = [];
 </script>
 
-<div>
-	<h1>Posts</h1>
-
-	<ul>
-		{#each posts as post}
-			<li>
-				<Card {post} />
-			</li>
-			<hr>
-		{/each}
-	</ul>
-</div>
+<ul>
+	{#each posts as post, index}
+		<li>
+			<Card {post} />
+		</li>
+		{#if index !== posts.length - 1}
+			<hr />
+		{/if}
+	{/each}
+</ul>
 
 <style>
 	ul {
 		list-style: none;
 		padding: 0;
 		display: flex;
+		gap: 1rem;
 		flex-direction: column;
 	}
 </style>
