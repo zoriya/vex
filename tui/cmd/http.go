@@ -9,6 +9,8 @@ import (
 	"net/http"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/google/uuid"
+	"github.com/zoryia/vex/tui/models"
 )
 
 type statusMsg int
@@ -133,12 +135,16 @@ func register(username string, password string, email string) tea.Cmd {
 	}
 }
 
-type getEntriesSuccessMsg []Entry
+type getEntriesSuccessMsg []models.Entry
 
 func getEntries(jwt *string) tea.Cmd {
 	return func() tea.Msg {
 		url := fmt.Sprintf("%s/entries", serverUrl)
-		req, _ := http.NewRequest(http.MethodGet, url, nil)
+		req, err := http.NewRequest(http.MethodGet, url, nil)
+		if err != nil {
+			log.Print(err)
+			return http.ErrMissingBoundary
+		}
 		if jwt == nil {
 			return missingJwtMsg{}
 		}
@@ -146,18 +152,20 @@ func getEntries(jwt *string) tea.Cmd {
 		req.Header.Add("Content-type", "application/json")
 		data, err := getData(req)
 		if err != nil {
+			log.Print(err)
 			return httpErrorMsg(err)
 		}
-		var entries []Entry
+		var entries []models.Entry
 		err = json.Unmarshal(data, &entries)
 		if err != nil {
+			log.Print(err)
 			return httpErrorMsg(err)
 		}
 		return getEntriesSuccessMsg(entries)
 	}
 }
 
-type getFeedsSuccessMsg []Feed
+type getFeedsSuccessMsg []models.Feed
 
 func getFeeds(jwt *string) tea.Cmd {
 	return func() tea.Msg {
@@ -171,11 +179,90 @@ func getFeeds(jwt *string) tea.Cmd {
 		if err != nil {
 			return httpErrorMsg(err)
 		}
-		var feeds []Feed
+		var feeds []models.Feed
 		err = json.Unmarshal(data, &feeds)
 		if err != nil {
 			return httpErrorMsg(err)
 		}
 		return getFeedsSuccessMsg(feeds)
+	}
+}
+
+type addFeedSuccessMsg struct{}
+
+func addFeed(jwt *string, link string, tags []string) tea.Cmd {
+	return func() tea.Msg {
+
+		url := fmt.Sprintf("%s/feeds", serverUrl)
+		body := struct {
+			Link string   `json:"link"`
+			Tags []string `json:"tags"`
+		}{
+			Link: link, Tags: tags,
+		}
+		out, err := json.Marshal(body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(out))
+		req.Header.Add("Content-type", "application/json")
+		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", *jwt))
+		data, err := getData(req)
+		if err != nil {
+			return err
+		}
+		var addFeedResp AuthRes
+		err = json.Unmarshal(data, &addFeedResp)
+		if err != nil {
+			return httpErrorMsg(err)
+		}
+		return addFeedSuccessMsg{}
+	}
+}
+
+type ignorePostSuccessMsg uuid.UUID
+
+func ignorePost(jwt *string, e models.Entry) tea.Cmd {
+	return func() tea.Msg {
+		url := fmt.Sprintf("%s/ignore/%s", serverUrl, e.Id.String())
+		req, _ := http.NewRequest(http.MethodPut, url, nil)
+		if jwt == nil {
+			return missingJwtMsg{}
+		}
+		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", *jwt))
+		data, err := getData(req)
+		if err != nil {
+			return httpErrorMsg(err)
+		}
+		var feeds []models.Feed
+		err = json.Unmarshal(data, &feeds)
+		if err != nil {
+			return httpErrorMsg(err)
+		}
+		return getFeedsSuccessMsg(feeds)
+	}
+}
+
+type toggleReadSuccessMsg uuid.UUID
+
+func toggleRead(jwt *string, e models.Entry) tea.Cmd {
+	return func() tea.Msg {
+		return nil
+	}
+}
+
+type toggleReadLaterSuccessMsg uuid.UUID
+
+func toggleReadLater(jwt *string, e models.Entry) tea.Cmd {
+	return func() tea.Msg {
+		return nil
+	}
+}
+
+type toggleBookmarkSuccessMsg uuid.UUID
+
+func toggleBookmark(jwt *string, e models.Entry) tea.Cmd {
+	return func() tea.Msg {
+		return nil
 	}
 }
