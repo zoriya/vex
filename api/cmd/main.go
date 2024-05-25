@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/jmoiron/sqlx"
@@ -12,6 +13,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
+	"github.com/swaggo/echo-swagger"
+	_ "github.com/zoriya/vex/cmd/docs"
 	"github.com/zoriya/vex"
 )
 
@@ -35,6 +38,11 @@ func (cv *Validator) Validate(i interface{}) error {
 	return nil
 }
 
+// @title Swagger for VEX API
+// @securityDefinitions.apikey JWT
+// @in header
+// @name Authorization
+// @description Prefix the value with `Bearer: `
 func main() {
 	con := fmt.Sprintf(
 		"postgresql://%v:%v@%v:%v/%v?sslmode=disable",
@@ -63,9 +71,14 @@ func main() {
 	e.Validator = &Validator{validator: validator.New()}
 	e.Use(middleware.Logger())
 
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
+
 	r := e.Group("")
 	r.Use(echojwt.WithConfig(echojwt.Config{
 		SigningKey: h.jwtSecret,
+		Skipper: func(c echo.Context) bool {
+			return strings.HasPrefix("/swagger/", c.Request().URL.Path)
+		},
 	}))
 
 	e.GET("/entries", h.GetEntries)
