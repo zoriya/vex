@@ -16,6 +16,12 @@ type ChangeEntryStatusDto struct {
 	IsIgnored    bool      `json:"isIgnored"`
 }
 
+// @Tags         Entries
+// @Summary      Get entries
+// @Produce      json
+// @Success      200    {object} vex.Entry
+// @Router       /entries [get]
+// @Security JWT
 func (h *Handler) GetEntries(c echo.Context) error {
 	user, err := GetCurrentUserId(c)
 	if err != nil {
@@ -28,6 +34,13 @@ func (h *Handler) GetEntries(c echo.Context) error {
 	return c.JSON(200, ret)
 }
 
+// @Tags         Entries
+// @Summary      Change status
+// @Produce      json
+// @Param        DTO body ChangeEntryStatusDto true " "
+// @Success      200    {object} vex.Entry
+// @Router       /entries [patch]
+// @Security JWT
 func (h *Handler) ChangeUserStatus(c echo.Context) error {
 	user, err := GetCurrentUserId(c)
 	if err != nil {

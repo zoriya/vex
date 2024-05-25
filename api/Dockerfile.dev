@@ -7,4 +7,4 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 EXPOSE 1597
-CMD wgo -xdir ./cmd/docs swag init -d cmd -o ./cmd/docs :: go run ./cmd
+CMD wgo -xdir ./cmd/docs swag init --parseDependency  --parseInternal --parseDepth 1 -q -d cmd -o ./cmd/docs :: go run ./cmd

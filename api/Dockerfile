@@ -4,7 +4,7 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN swag init -d cmd -o ./cmd/docs
+RUN swag init --parseDependency  --parseInternal --parseDepth 1 -q -d cmd -o ./cmd/docs
 RUN go build -o ./vex
 
 EXPOSE 1597

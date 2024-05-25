@@ -39,6 +39,10 @@ func (cv *Validator) Validate(i interface{}) error {
 }
 
 // @title Swagger for VEX API
+// @securityDefinitions.apikey JWT
+// @in header
+// @name Authorization
+// @description Prefix the value with `Bearer: `
 func main() {
 	con := fmt.Sprintf(
 		"postgresql://%v:%v@%v:%v/%v?sslmode=disable",

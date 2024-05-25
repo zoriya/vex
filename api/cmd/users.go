@@ -9,6 +9,10 @@ import (
 	"github.com/zoriya/vex"
 )
 
+type JWTResponse struct {
+	Token string `json:"token" validate:"required"`
+}
+
 type LoginDto struct {
 	Email    string `json:"email" validate:"required"`
 	Password string `json:"password" validate:"required"`
@@ -20,6 +24,13 @@ type RegisterDto struct {
 	Password string `json:"password" validate:"required"`
 }
 
+// @Tags         Auth
+// @Summary      Log in
+// @Produce      json
+// @Param        DTO body LoginDto true "Login Form"
+// @Success      200	{object} JWTResponse
+// @Success      403	{object} string
+// @Router       /login [post]
 func (h *Handler) Login(c echo.Context) error {
 	var req LoginDto
 	err := c.Bind(&req)
@@ -49,11 +60,19 @@ func (h *Handler) CreateToken(c echo.Context, user *vex.User) error {
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, echo.Map{
-		"token": t,
+	return c.JSON(http.StatusOK, JWTResponse{
+		Token: t,
 	})
 }
 
+// @Tags         Auth
+// @Summary      Create an account
+// @Produce      json
+// @Param        DTO body RegisterDto true "Signup Form"
+// @Success      200	{object} JWTResponse
+// @Success      403	{object} string
+// @Success      409	{object} string
+// @Router       /register [post]
 func (h *Handler) Register(c echo.Context) error {
 	var req RegisterDto
 	err := c.Bind(&req)
@@ -66,11 +85,17 @@ func (h *Handler) Register(c echo.Context) error {
 
 	user, err := h.users.Create(req.Name, req.Email, req.Password)
 	if err != nil {
-		return echo.NewHTTPError(409,"Email already taken")
+		return echo.NewHTTPError(409, "Email already taken")
 	}
 	return h.CreateToken(c, &user)
 }
 
+// @Tags         Auth
+// @Summary      Get info about the authed user
+// @Produce      json
+// @Success      200    {object} vex.User
+// @Router       /me [get]
+// @Security JWT
 func (h *Handler) GetMe(c echo.Context) error {
 	id, err := GetCurrentUserId(c)
 	if err != nil {

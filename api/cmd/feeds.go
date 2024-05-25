@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/labstack/echo/v4"
+	_ "github.com/zoriya/vex"
 	"log"
 	"net/http"
-
-	"github.com/labstack/echo/v4"
 )
 
 type AddFeedDto struct {
@@ -13,6 +13,11 @@ type AddFeedDto struct {
 	Tags []string `json:"tags" validate:"required"`
 }
 
+// @Tags         Feeds
+// @Summary      Get Feeds
+// @Produce      json
+// @Success      200	{array} vex.Feed
+// @Router       /feeds [get]
 func (h *Handler) GetFeeds(c echo.Context) error {
 	ret, err := h.feeds.ListFeeds()
 	if err != nil {
@@ -21,6 +26,15 @@ func (h *Handler) GetFeeds(c echo.Context) error {
 	return c.JSON(200, ret)
 }
 
+// @Tags         Feeds
+// @Summary      Add a single Feed
+// @Produce      json
+// @Param        DTO body AddFeedDto true "The Feed to save"
+// @Success      201    {object} vex.Feed
+// @Failure      400    {object} string
+// @Failure      409    {object} string
+// @Router       /feeds [post]
+// @Security JWT
 func (h *Handler) AddFeed(c echo.Context) error {
 	user, err := GetCurrentUserId(c)
 	if err != nil {
